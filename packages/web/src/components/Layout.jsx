@@ -12,8 +12,8 @@ export default function Layout() {
 
   return (
     <div className="app-container">
-      <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
-        {menuOpen ? '\u2715' : '\u2630'}
+      <button className={`hamburger ${menuOpen ? 'hidden' : ''}`} onClick={() => setMenuOpen(true)} aria-label="Menu">
+        ☰
       </button>
       <div className={`sidebar-backdrop ${menuOpen ? 'open' : ''}`} onClick={closeMenu} />
       <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>

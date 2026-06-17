@@ -344,6 +344,7 @@ tr:hover td { background: var(--verde-fondo); }
 
 @media (max-width: 768px) {
   .hamburger { display: flex; }
+  .hamburger.hidden { display: none; }
 
   .sidebar {
     transform: translateX(-100%);
@@ -352,6 +353,7 @@ tr:hover td { background: var(--verde-fondo); }
   }
 
   .sidebar.open { transform: translateX(0); }
+  .sidebar.open .sidebar-logo { padding-right: 3.5rem; }
 
   .sidebar-backdrop.open { display: block; }
 
