@@ -1,18 +1,29 @@
-import { Outlet } from 'react-router-dom';
+import { useState } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
+
+  const closeMenu = () => setMenuOpen(false);
 
   return (
     <div className="app-container">
-      <aside className="sidebar">
+      <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
+        {menuOpen ? '\u2715' : '\u2630'}
+      </button>
+      <div className={`sidebar-backdrop ${menuOpen ? 'open' : ''}`} onClick={closeMenu} />
+      <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
           <h1>Olivas</h1>
           <span>Gestion de Olivar</span>
         </div>
-        <Sidebar />
+        <div onClick={closeMenu}>
+          <Sidebar />
+        </div>
         {user && (
           <div style={{
             padding: '1rem', borderTop: '1px solid #3a5a34', marginTop: 'auto',
@@ -34,7 +45,7 @@ export default function Layout() {
               </div>
             </div>
             <button
-              onClick={logout}
+              onClick={() => { logout(); closeMenu(); }}
               title="Cerrar sesion"
               style={{
                 background: 'none', border: 'none', color: '#8faa8f', cursor: 'pointer',
