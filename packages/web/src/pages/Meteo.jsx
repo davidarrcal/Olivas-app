@@ -6,6 +6,21 @@ import { useToast } from '../hooks/useToast';
 const fechaHoy = () => new Date().toISOString().split('T')[0];
 const formVacio = { fecha: fechaHoy(), temp_max: '', temp_min: '', lluvia_mm: '', humedad_pct: '', observaciones: '' };
 
+const ICONOS_CLIMA = {
+  'Despejado': '\u2600\uFE0F', 'Despejado noche': '\uD83C\uDF19', 'Poco nuboso': '\uD83C\uDF24\uFE0F',
+  'Intervalos nubosos': '\u26C5', 'Nuboso': '\uD83C\uDF2B\uFE0F', 'Muy nuboso': '\uD83C\uDF2B\uFE0F',
+  'Cubierto': '\uD83C\uDF2B\uFE0F', 'Lluvia': '\uD83C\uDF27\uFE0F', 'Lluvia moderada': '\uD83C\uDF27\uFE0F',
+  'Lluvia fuerte': '\uD83C\uDF27\uFE0F', 'Tormenta': '\u26C8\uFE0F', 'Nieve': '\uD83C\uDF28\uFE0F',
+};
+
+function iconoClima(estado) {
+  if (!estado) return '\uD83C\uDF24\uFE0F';
+  for (const [key, icon] of Object.entries(ICONOS_CLIMA)) {
+    if (estado.toLowerCase().includes(key.toLowerCase())) return icon;
+  }
+  return '\uD83C\uDF24\uFE0F';
+}
+
 export default function Meteo() {
   const [fincaId, setFincaId] = useState(null);
   useEffect(() => {
@@ -15,8 +30,10 @@ export default function Meteo() {
   }, []);
   const [datos, setDatos] = useState([]);
   const [resumen, setResumen] = useState(null);
+  const [prediccion, setPrediccion] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(formVacio);
+  const [loadingAemet, setLoadingAemet] = useState(false);
   const { confirm } = useConfirm();
   const { showToast } = useToast();
 
@@ -29,6 +46,26 @@ export default function Meteo() {
     ]);
     setDatos(datosData);
     if (resumenData) setResumen(resumenData);
+    cargarPrediccion();
+  }
+
+  async function cargarPrediccion() {
+    try {
+      const data = await api.get('/fincas/' + fincaId + '/meteo/aemet');
+      setPrediccion(data);
+    } catch { setPrediccion([]); }
+  }
+
+  async function importarAemet() {
+    setLoadingAemet(true);
+    try {
+      await api.post('/fincas/' + fincaId + '/meteo/importar-aemet');
+      showToast('Datos de AEMET importados correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al importar datos de AEMET', 'error');
+    }
+    setLoadingAemet(false);
   }
 
   async function handleSubmit(e) {
@@ -52,7 +89,7 @@ export default function Meteo() {
   }
 
   async function eliminar(id) {
-    const ok = await confirm('Eliminar registro', '¿Desea eliminar este registro meteorologico?');
+    const ok = await confirm('Eliminar registro', 'Desea eliminar este registro meteorologico?');
     if (!ok) return;
     try {
       await api.del('/meteo/' + id);
@@ -72,8 +109,45 @@ export default function Meteo() {
     <div>
       <div className="page-header">
         <h2>Meteorologia</h2>
-        <button className="btn btn-primary" onClick={() => setShowForm(true)}>+ Nuevo registro</button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button className="btn btn-primary" onClick={() => setShowForm(true)}>+ Registro manual</button>
+          <button className="btn btn-secondary" onClick={importarAemet} disabled={loadingAemet}>
+            {loadingAemet ? 'Importando...' : 'Importar AEMET'}
+          </button>
+        </div>
       </div>
+
+      {prediccion.length > 0 && (
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h3 style={{ color: 'var(--verde-oscuro)', marginBottom: '0.75rem' }}>Pronostico AEMET - Zujar (Granada)</h3>
+          <div className="card-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
+            {prediccion.slice(0, 7).map((dia, i) => (
+              <div key={i} className="card" style={{ textAlign: 'center', padding: '0.75rem' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--gris-medio)', marginBottom: '0.3rem' }}>
+                  {dia.fecha ? new Date(dia.fecha).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' }) : '-'}
+                </div>
+                <div style={{ fontSize: '1.8rem' }}>{iconoClima(dia.estado_cielo)}</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--gris-medio)', marginBottom: '0.3rem' }}>
+                  {dia.estado_cielo || '-'}
+                </div>
+                <div style={{ fontWeight: '600' }}>
+                  <span style={{ color: '#c0392b' }}>{dia.temp_max ?? '-'}\u00B0</span>
+                  {' / '}
+                  <span style={{ color: '#2980b9' }}>{dia.temp_min ?? '-'}\u00B0</span>
+                </div>
+                {dia.lluvia_mm !== null && dia.lluvia_mm > 0 && (
+                  <div style={{ color: '#2980b9', fontSize: '0.8rem' }}>{dia.lluvia_mm} mm</div>
+                )}
+                {dia.prob_precipitacion !== null && (
+                  <div style={{ color: 'var(--gris-medio)', fontSize: '0.75rem' }}>
+                    Precip: {dia.prob_precipitacion}%
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {resumen && (
         <div className="card-grid" style={{ marginBottom: '1.5rem' }}>
@@ -86,7 +160,7 @@ export default function Meteo() {
 
       {datos.filter(esDiaLluvioso).length > 0 && (
         <div className="alerta alerta-info" style={{ marginBottom: '1rem' }}>
-          <strong>Dias con lluvia:</strong> {datos.filter(esDiaLluvioso).length} registros con precipitacion en los datos mostrados.
+          <strong>Dias con lluvia:</strong> {datos.filter(esDiaLluvioso).length} registros con precipitacion.
         </div>
       )}
 
@@ -96,28 +170,29 @@ export default function Meteo() {
         </div>
       )}
 
+      <h3 style={{ color: 'var(--verde-oscuro)', marginBottom: '0.75rem' }}>Registros</h3>
       <div className="table-container">
         <table>
           <thead>
-            <tr><th>Fecha</th><th>T. Max (C)</th><th>T. Min (C)</th><th>Lluvia (mm)</th><th>Humedad (%)</th><th>Fuente</th><th></th></tr>
+            <tr><th>Fecha</th><th>T. Max</th><th>T. Min</th><th>Lluvia</th><th>Humedad</th><th>Fuente</th><th></th></tr>
           </thead>
           <tbody>
             {datos.map(d => (
               <tr key={d.id} style={esDiaLluvioso(d) ? { background: '#e8f4e8' } : esHelada(d) ? { background: '#fde8e8' } : {}}>
                 <td>{new Date(d.fecha).toLocaleDateString('es-ES')}</td>
-                <td>{d.temp_max ?? '-'}</td>
-                <td>{d.temp_min ?? '-'}{d.temp_min !== null && d.temp_min < 0 ? ' !!' : ''}</td>
-                <td>{d.lluvia_mm ?? '-'}{d.lluvia_mm > 0 ? ' &' : ''}</td>
-                <td>{d.humedad_pct ?? '-'}</td>
-                <td><span className="badge badge-azul">{d.fuente}</span></td>
-                <td><button className="btn btn-danger btn-sm" onClick={() => eliminar(d.id)}>X</button></td>
+                <td>{d.temp_max ?? '-'}\u00B0</td>
+                <td>{d.temp_min ?? '-'}\u00B0{d.temp_min !== null && d.temp_min < 0 ? ' !!' : ''}</td>
+                <td>{d.lluvia_mm ?? '-'}{d.lluvia_mm > 0 ? ' mm' : ''}</td>
+                <td>{d.humedad_pct ?? '-'}{d.humedad_pct ? '%' : ''}</td>
+                <td><span className={d.fuente === 'aemet' ? 'badge badge-azul' : 'badge badge-verde'}>{d.fuente === 'aemet' ? 'AEMET' : 'Manual'}</span></td>
+                <td>{d.fuente !== 'aemet' && <button className="btn btn-danger btn-sm" onClick={() => eliminar(d.id)}>X</button>}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {datos.length === 0 && <div className="empty-state"><p>No hay datos meteorologicos.</p></div>}
+      {datos.length === 0 && <div className="empty-state"><p>No hay datos meteorologicos. Importa de AEMET o anade manualmente.</p></div>}
 
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>

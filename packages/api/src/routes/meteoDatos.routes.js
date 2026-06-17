@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const meteoController = require('../controllers/meteoDatos.controller');
+const aemetService = require('../services/aemet.service');
 const validate = require('../middleware/validate');
 const Joi = require('joi');
 
@@ -9,13 +10,60 @@ const meteoSchema = Joi.object({
   temp_min: Joi.number().allow(null),
   lluvia_mm: Joi.number().allow(null),
   humedad_pct: Joi.number().min(0).max(100).allow(null),
-  fuente: Joi.string().valid('manual', 'api').default('manual'),
+  fuente: Joi.string().valid('manual', 'aemet').default('manual'),
   observaciones: Joi.string().allow(null, '')
 });
 
 const router = Router({ mergeParams: true });
 
 router.get('/resumen', meteoController.resumen);
+router.get('/aemet', async (req, res) => {
+  try {
+    const prediccion = await aemetService.getPrediccionSemana();
+    res.json(prediccion);
+  } catch (err) {
+    res.status(502).json({ error: 'Error al obtener datos de AEMET', details: err.message });
+  }
+});
+router.post('/importar-aemet', async (req, res) => {
+  try {
+    const datos = await aemetService.getPrediccionHoy();
+    if (!datos) return res.status(404).json({ error: 'No hay datos de AEMET disponibles' });
+    const prisma = require('../prisma');
+    const fincaId = Number(req.params.fincaId);
+    const fecha = new Date(datos.fecha);
+    const existente = await prisma.meteoDatos.findFirst({
+      where: { finca_id: fincaId, fecha, fuente: 'aemet' }
+    });
+    let registro;
+    if (existente) {
+      registro = await prisma.meteoDatos.update({
+        where: { id: existente.id },
+        data: {
+          temp_max: datos.temp_max,
+          temp_min: datos.temp_min,
+          lluvia_mm: datos.lluvia_mm,
+          humedad_pct: datos.humedad_pct
+        }
+      });
+    } else {
+      registro = await prisma.meteoDatos.create({
+        data: {
+          finca_id: fincaId,
+          fecha,
+          temp_max: datos.temp_max,
+          temp_min: datos.temp_min,
+          lluvia_mm: datos.lluvia_mm,
+          humedad_pct: datos.humedad_pct,
+          fuente: 'aemet'
+        }
+      });
+    }
+    res.json(registro);
+  } catch (err) {
+    res.status(500).json({ error: 'Error al importar datos de AEMET', details: err.message });
+  }
+});
 router.get('/', meteoController.obtenerTodos);
 router.get('/:id', meteoController.obtenerPorId);
 router.post('/', validate(meteoSchema), meteoController.crear);
