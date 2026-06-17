@@ -12,27 +12,33 @@ import Maquinaria from './pages/Maquinaria';
 import Inventario from './pages/Inventario';
 import Calendario from './pages/Calendario';
 import Informes from './pages/Informes';
+import { ConfirmProvider } from './context/ConfirmContext';
+import { ToastProvider } from './context/ToastContext';
 import './styles.css';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/fincas" element={<Fincas />} />
-          <Route path="/fincas/:id" element={<FincaDetalle />} />
-          <Route path="/fincas/:id/meteo" element={<Meteo />} />
-          <Route path="/fincas/:id/economia" element={<Economia />} />
-          <Route path="/fincas/:id/maquinaria" element={<Maquinaria />} />
-          <Route path="/fincas/:id/inventario" element={<Inventario />} />
-          <Route path="/fincas/:id/calendario" element={<Calendario />} />
-          <Route path="/fincas/:id/informes" element={<Informes />} />
-          <Route path="/bancales/:id" element={<BancalDetalle />} />
-          <Route path="/productos" element={<Productos />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <ConfirmProvider>
+      <ToastProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/fincas" element={<Fincas />} />
+              <Route path="/fincas/:id" element={<FincaDetalle />} />
+              <Route path="/fincas/:id/meteo" element={<Meteo />} />
+              <Route path="/fincas/:id/economia" element={<Economia />} />
+              <Route path="/fincas/:id/maquinaria" element={<Maquinaria />} />
+              <Route path="/fincas/:id/inventario" element={<Inventario />} />
+              <Route path="/fincas/:id/calendario" element={<Calendario />} />
+              <Route path="/fincas/:id/informes" element={<Informes />} />
+              <Route path="/bancales/:id" element={<BancalDetalle />} />
+              <Route path="/productos" element={<Productos />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </ToastProvider>
+    </ConfirmProvider>
   );
 }

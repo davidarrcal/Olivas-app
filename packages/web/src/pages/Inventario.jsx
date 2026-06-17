@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const formVacio = { producto_id: '', stock_actual: '', stock_minimo: '', precio_compra: '', fecha_ultima_compra: '' };
 
@@ -12,6 +14,8 @@ export default function Inventario() {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(formVacio);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); }, [fincaId]);
 
@@ -34,17 +38,30 @@ export default function Inventario() {
       precio_compra: form.precio_compra ? Number(form.precio_compra) : null,
       fecha_ultima_compra: form.fecha_ultima_compra || null
     };
-    if (editId) {
-      await api.put('/inventario/' + editId, body);
-    } else {
-      await api.post('/fincas/' + fincaId + '/inventario', body);
+    try {
+      if (editId) {
+        await api.put('/inventario/' + editId, body);
+        showToast('Inventario actualizado correctamente');
+      } else {
+        await api.post('/fincas/' + fincaId + '/inventario', body);
+        showToast('Registro de inventario creado correctamente');
+      }
+      setShowForm(false); setForm(formVacio); setEditId(null); cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al guardar inventario', 'error');
     }
-    setShowForm(false); setForm(formVacio); setEditId(null); cargar();
   }
 
   async function eliminar(id) {
-    if (!confirm('Eliminar este registro del inventario?')) return;
-    await api.del('/inventario/' + id); cargar();
+    const ok = await confirm('Eliminar registro', '¿Desea eliminar este registro del inventario?');
+    if (!ok) return;
+    try {
+      await api.del('/inventario/' + id);
+      showToast('Registro de inventario eliminado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar registro de inventario', 'error');
+    }
   }
 
   function editar(item) {

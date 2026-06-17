@@ -11,15 +11,24 @@ async function request(endpoint, options = {}) {
     config.body = JSON.stringify(options.body);
   }
 
-  const response = await fetch(url, config);
+  try {
+    const response = await fetch(url, config);
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: response.statusText }));
-    throw new Error(error.error || 'Error en la peticion');
+    if (response.status === 204) return null;
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || `Error ${response.status}`);
+    }
+
+    return data;
+  } catch (err) {
+    if (err.name === 'TypeError' && err.message === 'Failed to fetch') {
+      throw new Error('No se puede conectar con el servidor. Intentalo de nuevo en unos segundos.');
+    }
+    throw err;
   }
-
-  if (response.status === 204) return null;
-  return response.json();
 }
 
 const api = {

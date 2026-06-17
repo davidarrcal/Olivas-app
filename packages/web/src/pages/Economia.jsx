@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const CATEGORIAS_GASTO = [
   { valor: 'abono', etiqueta: 'Abono' },
@@ -35,6 +37,8 @@ export default function Economia() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(formGastoVacio);
   const [bancales, setBancales] = useState([]);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargarTodo(); }, [fincaId]);
 
@@ -51,31 +55,63 @@ export default function Economia() {
 
   async function handleSubmitGasto(e) {
     e.preventDefault();
-    await api.post('/fincas/' + fincaId + '/gastos', {
-      finca_id: Number(fincaId),
-      fecha: form.fecha, concepto: form.concepto, categoria: form.categoria,
-      importe: Number(form.importe),
-      bancal_id: form.bancal_id ? Number(form.bancal_id) : null,
-      observaciones: form.observaciones || null
-    });
-    setShowForm(false); setForm(tab === 'gastos' ? formGastoVacio : formIngresoVacio); cargarTodo();
+    try {
+      await api.post('/fincas/' + fincaId + '/gastos', {
+        finca_id: Number(fincaId),
+        fecha: form.fecha, concepto: form.concepto, categoria: form.categoria,
+        importe: Number(form.importe),
+        bancal_id: form.bancal_id ? Number(form.bancal_id) : null,
+        observaciones: form.observaciones || null
+      });
+      setShowForm(false); setForm(tab === 'gastos' ? formGastoVacio : formIngresoVacio);
+      showToast('Gasto creado correctamente');
+      cargarTodo();
+    } catch (err) {
+      showToast(err.message || 'Error al crear gasto', 'error');
+    }
   }
 
   async function handleSubmitIngreso(e) {
     e.preventDefault();
-    await api.post('/fincas/' + fincaId + '/ingresos', {
-      finca_id: Number(fincaId),
-      fecha: form.fecha, concepto: form.concepto, categoria: form.categoria,
-      importe: Number(form.importe),
-      kg_vendidos: form.kg_vendidos ? Number(form.kg_vendidos) : null,
-      precio_kg: form.precio_kg ? Number(form.precio_kg) : null,
-      observaciones: form.observaciones || null
-    });
-    setShowForm(false); setForm(formIngresoVacio); cargarTodo();
+    try {
+      await api.post('/fincas/' + fincaId + '/ingresos', {
+        finca_id: Number(fincaId),
+        fecha: form.fecha, concepto: form.concepto, categoria: form.categoria,
+        importe: Number(form.importe),
+        kg_vendidos: form.kg_vendidos ? Number(form.kg_vendidos) : null,
+        precio_kg: form.precio_kg ? Number(form.precio_kg) : null,
+        observaciones: form.observaciones || null
+      });
+      setShowForm(false); setForm(formIngresoVacio);
+      showToast('Ingreso creado correctamente');
+      cargarTodo();
+    } catch (err) {
+      showToast(err.message || 'Error al crear ingreso', 'error');
+    }
   }
 
-  async function eliminarGasto(id) { if (!confirm('Eliminar?')) return; await api.del('/gastos/' + id); cargarTodo(); }
-  async function eliminarIngreso(id) { if (!confirm('Eliminar?')) return; await api.del('/ingresos/' + id); cargarTodo(); }
+  async function eliminarGasto(id) {
+    const ok = await confirm('Eliminar gasto', '¿Desea eliminar este gasto?');
+    if (!ok) return;
+    try {
+      await api.del('/gastos/' + id);
+      showToast('Gasto eliminado correctamente');
+      cargarTodo();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar gasto', 'error');
+    }
+  }
+  async function eliminarIngreso(id) {
+    const ok = await confirm('Eliminar ingreso', '¿Desea eliminar este ingreso?');
+    if (!ok) return;
+    try {
+      await api.del('/ingresos/' + id);
+      showToast('Ingreso eliminado correctamente');
+      cargarTodo();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar ingreso', 'error');
+    }
+  }
 
   const beneficio = (resumenGastos?.total || 0) - (resumenIngresos?.total || 0);
 

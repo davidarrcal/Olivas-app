@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const TIPOS_ABONO = [
   { valor: 'suelo', etiqueta: 'Suelo (granulado)' },
@@ -33,6 +35,8 @@ export default function AbonadoTab({ bancalId, fincaId }) {
   const [productos, setProductos] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(formVacio);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); cargarProductos(); }, [bancalId]);
 
@@ -57,16 +61,27 @@ export default function AbonadoTab({ bancalId, fincaId }) {
       estado_fenologico: form.estado_fenologico || null,
       observaciones: form.observaciones || null
     };
-    await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/abonados', body);
-    setShowForm(false);
-    setForm(formVacio);
-    cargar();
+    try {
+      await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/abonados', body);
+      setShowForm(false);
+      setForm(formVacio);
+      showToast('Abonado creado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al crear abonado', 'error');
+    }
   }
 
   async function eliminar(id) {
-    if (!confirm('Eliminar este abonado?')) return;
-    await api.del('/abonados/' + id);
-    cargar();
+    const ok = await confirm('Eliminar abonado', '¿Desea eliminar este abonado?');
+    if (!ok) return;
+    try {
+      await api.del('/abonados/' + id);
+      showToast('Abonado eliminado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar abonado', 'error');
+    }
   }
 
   return (

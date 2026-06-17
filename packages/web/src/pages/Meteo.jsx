@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const fechaHoy = () => new Date().toISOString().split('T')[0];
 const formVacio = { fecha: fechaHoy(), temp_max: '', temp_min: '', lluvia_mm: '', humedad_pct: '', observaciones: '' };
@@ -11,6 +13,8 @@ export default function Meteo() {
   const [resumen, setResumen] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(formVacio);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); }, [fincaId]);
 
@@ -25,21 +29,34 @@ export default function Meteo() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    await api.post('/fincas/' + fincaId + '/meteo', {
-      fecha: form.fecha,
-      temp_max: form.temp_max ? Number(form.temp_max) : null,
-      temp_min: form.temp_min ? Number(form.temp_min) : null,
-      lluvia_mm: form.lluvia_mm ? Number(form.lluvia_mm) : null,
-      humedad_pct: form.humedad_pct ? Number(form.humedad_pct) : null,
-      fuente: 'manual',
-      observaciones: form.observaciones || null
-    });
-    setShowForm(false); setForm(formVacio); cargar();
+    try {
+      await api.post('/fincas/' + fincaId + '/meteo', {
+        fecha: form.fecha,
+        temp_max: form.temp_max ? Number(form.temp_max) : null,
+        temp_min: form.temp_min ? Number(form.temp_min) : null,
+        lluvia_mm: form.lluvia_mm ? Number(form.lluvia_mm) : null,
+        humedad_pct: form.humedad_pct ? Number(form.humedad_pct) : null,
+        fuente: 'manual',
+        observaciones: form.observaciones || null
+      });
+      setShowForm(false); setForm(formVacio);
+      showToast('Registro meteorologico creado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al crear registro meteorologico', 'error');
+    }
   }
 
   async function eliminar(id) {
-    if (!confirm('Eliminar este registro meteo?')) return;
-    await api.del('/meteo/' + id); cargar();
+    const ok = await confirm('Eliminar registro', '¿Desea eliminar este registro meteorologico?');
+    if (!ok) return;
+    try {
+      await api.del('/meteo/' + id);
+      showToast('Registro meteorologico eliminado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar registro meteorologico', 'error');
+    }
   }
 
   function esDiaLluvioso(d) { return d.lluvia_mm > 0; }

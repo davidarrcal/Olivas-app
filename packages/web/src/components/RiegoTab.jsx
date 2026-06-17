@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const fechaHoy = () => new Date().toISOString().split('T')[0];
 
@@ -9,6 +11,8 @@ export default function RiegoTab({ bancalId, fincaId }) {
   const [riegos, setRiegos] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(formVacio);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); }, [bancalId]);
 
@@ -28,16 +32,27 @@ export default function RiegoTab({ bancalId, fincaId }) {
       humedad_suelo_pct: form.humedad_suelo_pct ? Number(form.humedad_suelo_pct) : null,
       observaciones: form.observaciones || null
     };
-    await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/riegos', body);
-    setShowForm(false);
-    setForm(formVacio);
-    cargar();
+    try {
+      await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/riegos', body);
+      setShowForm(false);
+      setForm(formVacio);
+      showToast('Riego creado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al crear riego', 'error');
+    }
   }
 
   async function eliminar(id) {
-    if (!confirm('Eliminar este riego?')) return;
-    await api.del('/riegos/' + id);
-    cargar();
+    const ok = await confirm('Eliminar riego', '¿Desea eliminar este riego?');
+    if (!ok) return;
+    try {
+      await api.del('/riegos/' + id);
+      showToast('Riego eliminado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar riego', 'error');
+    }
   }
 
   function formatDate(iso) {

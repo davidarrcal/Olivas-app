@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const TEXTURAS = [
   { valor: 'arcilloso', etiqueta: 'Arcilloso' },
@@ -17,6 +19,8 @@ export default function FincaDetalle() {
   const [finca, setFinca] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(formBancalVacio);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); }, [id]);
 
@@ -27,24 +31,35 @@ export default function FincaDetalle() {
 
   async function crearBancal(e) {
     e.preventDefault();
-    await api.post(`/fincas/${id}/bancales`, {
-      finca_id: Number(id),
-      nombre: form.nombre,
-      superficie: form.superficie ? Number(form.superficie) : null,
-      textura_suelo: form.textura_suelo || null,
-      pendiente: form.pendiente ? Number(form.pendiente) : null,
-      marco_plantacion: form.marco_plantacion || null,
-      observaciones: form.observaciones || null
-    });
-    setShowModal(false);
-    setForm(formBancalVacio);
-    cargar();
+    try {
+      await api.post(`/fincas/${id}/bancales`, {
+        finca_id: Number(id),
+        nombre: form.nombre,
+        superficie: form.superficie ? Number(form.superficie) : null,
+        textura_suelo: form.textura_suelo || null,
+        pendiente: form.pendiente ? Number(form.pendiente) : null,
+        marco_plantacion: form.marco_plantacion || null,
+        observaciones: form.observaciones || null
+      });
+      setShowModal(false);
+      setForm(formBancalVacio);
+      showToast('Bancal creado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al crear bancal', 'error');
+    }
   }
 
   async function eliminarBancal(bancalId) {
-    if (!confirm('Eliminar este bancal y todos sus datos asociados?')) return;
-    await api.del(`/fincas/${id}/bancales/${bancalId}`);
-    cargar();
+    const ok = await confirm('Eliminar bancal', '¿Desea eliminar este bancal y todos sus datos asociados?');
+    if (!ok) return;
+    try {
+      await api.del(`/fincas/${id}/bancales/${bancalId}`);
+      showToast('Bancal eliminado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar bancal', 'error');
+    }
   }
 
   if (!finca) return <div className="empty-state"><h3>Cargando...</h3></div>;

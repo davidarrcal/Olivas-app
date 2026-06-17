@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const TIPOS = [
   { valor: 'abono', etiqueta: 'Abono' },
@@ -17,6 +19,8 @@ export default function Productos() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(formVacio);
   const [editId, setEditId] = useState(null);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); }, [filtroTipo]);
 
@@ -36,21 +40,33 @@ export default function Productos() {
       precio_unitario: form.precio_unitario ? Number(form.precio_unitario) : null,
       observaciones: form.observaciones || null
     };
-    if (editId) {
-      await api.put('/productos/' + editId, body);
-    } else {
-      await api.post('/productos', body);
+    try {
+      if (editId) {
+        await api.put('/productos/' + editId, body);
+        showToast('Producto actualizado correctamente');
+      } else {
+        await api.post('/productos', body);
+        showToast('Producto creado correctamente');
+      }
+      setShowForm(false);
+      setForm(formVacio);
+      setEditId(null);
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al guardar producto', 'error');
     }
-    setShowForm(false);
-    setForm(formVacio);
-    setEditId(null);
-    cargar();
   }
 
   async function eliminar(id) {
-    if (!confirm('Eliminar este producto?')) return;
-    await api.del('/productos/' + id);
-    cargar();
+    const ok = await confirm('Eliminar producto', '¿Desea eliminar este producto?');
+    if (!ok) return;
+    try {
+      await api.del('/productos/' + id);
+      showToast('Producto eliminado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar producto', 'error');
+    }
   }
 
   function editar(p) {

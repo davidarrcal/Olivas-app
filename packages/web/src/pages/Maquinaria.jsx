@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const fechaHoy = () => new Date().toISOString().split('T')[0];
 const formVacio = { nombre: '', tipo: '', horas_actuales: '', observaciones: '' };
@@ -13,6 +15,8 @@ export default function Maquinaria() {
   const [showMantForm, setShowMantForm] = useState(null);
   const [form, setForm] = useState(formVacio);
   const [formMant, setFormMant] = useState(formMantVacio);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); }, [fincaId]);
 
@@ -23,32 +27,60 @@ export default function Maquinaria() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    await api.post('/fincas/' + fincaId + '/maquinaria', {
-      finca_id: Number(fincaId),
-      nombre: form.nombre, tipo: form.tipo || null,
-      horas_actuales: form.horas_actuales ? Number(form.horas_actuales) : null,
-      observaciones: form.observaciones || null
-    });
-    setShowForm(false); setForm(formVacio); cargar();
+    try {
+      await api.post('/fincas/' + fincaId + '/maquinaria', {
+        finca_id: Number(fincaId),
+        nombre: form.nombre, tipo: form.tipo || null,
+        horas_actuales: form.horas_actuales ? Number(form.horas_actuales) : null,
+        observaciones: form.observaciones || null
+      });
+      setShowForm(false); setForm(formVacio);
+      showToast('Maquinaria creada correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al crear maquinaria', 'error');
+    }
   }
 
-  async function eliminar(id) { if (!confirm('Eliminar?')) return; await api.del('/maquinaria/' + id); cargar(); }
+  async function eliminar(id) {
+    const ok = await confirm('Eliminar maquinaria', '¿Desea eliminar esta maquinaria?');
+    if (!ok) return;
+    try {
+      await api.del('/maquinaria/' + id);
+      showToast('Maquinaria eliminada correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar maquinaria', 'error');
+    }
+  }
 
   async function handleSubmitMant(e) {
     e.preventDefault();
-    await api.post('/fincas/' + fincaId + '/maquinaria/' + showMantForm + '/mantenimientos', {
-      fecha: formMant.fecha, tipo: formMant.tipo,
-      descripcion: formMant.descripcion || null,
-      proximo_aviso_horas: formMant.proximo_aviso_horas ? Number(formMant.proximo_aviso_horas) : null,
-      coste: formMant.coste ? Number(formMant.coste) : null
-    });
-    setShowMantForm(null); setFormMant(formMantVacio); cargar();
+    try {
+      await api.post('/fincas/' + fincaId + '/maquinaria/' + showMantForm + '/mantenimientos', {
+        fecha: formMant.fecha, tipo: formMant.tipo,
+        descripcion: formMant.descripcion || null,
+        proximo_aviso_horas: formMant.proximo_aviso_horas ? Number(formMant.proximo_aviso_horas) : null,
+        coste: formMant.coste ? Number(formMant.coste) : null
+      });
+      setShowMantForm(null); setFormMant(formMantVacio);
+      showToast('Mantenimiento creado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al crear mantenimiento', 'error');
+    }
   }
 
   async function eliminarMant(maqId, mantId) {
-    if (!confirm('Eliminar mantenimiento?')) return;
-    await api.del('/maquinaria/' + maqId + '/mantenimientos/' + mantId);
-    cargar();
+    const ok = await confirm('Eliminar mantenimiento', '¿Desea eliminar este mantenimiento?');
+    if (!ok) return;
+    try {
+      await api.del('/maquinaria/' + maqId + '/mantenimientos/' + mantId);
+      showToast('Mantenimiento eliminado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar mantenimiento', 'error');
+    }
   }
 
   return (

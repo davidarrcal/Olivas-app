@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 import RiegoTab from '../components/RiegoTab';
 import AbonadoTab from '../components/AbonadoTab';
 import TratamientoTab from '../components/TratamientoTab';
@@ -19,6 +21,8 @@ export default function BancalDetalle() {
   const [tab, setTab] = useState('variedades');
   const [showVariedad, setShowVariedad] = useState(false);
   const [formVar, setFormVar] = useState(formVariedadVacia);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); }, [id]);
 
@@ -31,19 +35,31 @@ export default function BancalDetalle() {
 
   async function crearVariedad(e) {
     e.preventDefault();
-    await api.post('/fincas/' + bancal.finca_id + '/bancales/' + id + '/variedades', {
-      variedad: formVar.variedad, num_arboles: Number(formVar.num_arboles),
-      ano_plantacion: formVar.ano_plantacion ? Number(formVar.ano_plantacion) : null,
-      produccion_estimada: formVar.produccion_estimada ? Number(formVar.produccion_estimada) : null,
-      observaciones: formVar.observaciones || null
-    });
-    setShowVariedad(false); setFormVar(formVariedadVacia); cargar();
+    try {
+      await api.post('/fincas/' + bancal.finca_id + '/bancales/' + id + '/variedades', {
+        variedad: formVar.variedad, num_arboles: Number(formVar.num_arboles),
+        ano_plantacion: formVar.ano_plantacion ? Number(formVar.ano_plantacion) : null,
+        produccion_estimada: formVar.produccion_estimada ? Number(formVar.produccion_estimada) : null,
+        observaciones: formVar.observaciones || null
+      });
+      setShowVariedad(false); setFormVar(formVariedadVacia);
+      showToast('Variedad creada correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al crear variedad', 'error');
+    }
   }
 
   async function eliminarVariedad(varId) {
-    if (!confirm('Eliminar esta variedad?')) return;
-    await api.del('/fincas/' + bancal.finca_id + '/bancales/variedades/' + varId);
-    cargar();
+    const ok = await confirm('Eliminar variedad', '¿Desea eliminar esta variedad?');
+    if (!ok) return;
+    try {
+      await api.del('/fincas/' + bancal.finca_id + '/bancales/variedades/' + varId);
+      showToast('Variedad eliminada correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar variedad', 'error');
+    }
   }
 
   if (!bancal) return <div className="empty-state"><h3>Cargando...</h3></div>;

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const TIPOS_LABOR = ['Riego','Abonado','Tratamiento','Poda','Recoleccion','Limpieza','Revisión','Otro'];
 const fechaHoy = () => new Date().toISOString().split('T')[0];
@@ -9,6 +11,8 @@ export default function DiarioCampoTab({ bancalId, fincaId }) {
   const [registros, setRegistros] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(formVacio);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); }, [bancalId]);
 
@@ -19,18 +23,31 @@ export default function DiarioCampoTab({ bancalId, fincaId }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/diario', {
-      fecha: form.fecha,
-      horas: form.horas ? Number(form.horas) : null,
-      tipo_labor: form.tipo_labor || null,
-      descripcion: form.descripcion || null
-    });
-    setShowForm(false); setForm(formVacio); cargar();
+    try {
+      await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/diario', {
+        fecha: form.fecha,
+        horas: form.horas ? Number(form.horas) : null,
+        tipo_labor: form.tipo_labor || null,
+        descripcion: form.descripcion || null
+      });
+      setShowForm(false); setForm(formVacio);
+      showToast('Entrada del diario creada correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al crear entrada del diario', 'error');
+    }
   }
 
   async function eliminar(id) {
-    if (!confirm('Eliminar este registro?')) return;
-    await api.del('/diario/' + id); cargar();
+    const ok = await confirm('Eliminar entrada', '¿Desea eliminar esta entrada del diario?');
+    if (!ok) return;
+    try {
+      await api.del('/diario/' + id);
+      showToast('Entrada del diario eliminada correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar entrada del diario', 'error');
+    }
   }
 
   const totalHoras = registros.reduce((s, r) => s + (r.horas || 0), 0);

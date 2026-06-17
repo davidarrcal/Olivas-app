@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const TIPOS_ANALISIS = [
   { valor: 'suelo', etiqueta: 'Analisis de suelo' },
@@ -14,6 +16,8 @@ export default function AnalisisTab({ bancalId, fincaId }) {
   const [analisis, setAnalisis] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(formVacio);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); }, [bancalId]);
 
@@ -39,13 +43,26 @@ export default function AnalisisTab({ bancalId, fincaId }) {
       recomendaciones: form.recomendaciones || null,
       observaciones: form.observaciones || null
     };
-    await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/analisis', body);
-    setShowForm(false); setForm(formVacio); cargar();
+    try {
+      await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/analisis', body);
+      setShowForm(false); setForm(formVacio);
+      showToast('Analisis creado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al crear analisis', 'error');
+    }
   }
 
   async function eliminar(id) {
-    if (!confirm('Eliminar este analisis?')) return;
-    await api.del('/analisis/' + id); cargar();
+    const ok = await confirm('Eliminar analisis', '¿Desea eliminar este analisis?');
+    if (!ok) return;
+    try {
+      await api.del('/analisis/' + id);
+      showToast('Analisis eliminado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar analisis', 'error');
+    }
   }
 
   function getUltimo(tipo) {

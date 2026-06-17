@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const PLAGAS = [
   'Mosca del olivo (Bactrocera oleae)',
@@ -22,6 +24,8 @@ export default function TratamientoTab({ bancalId, fincaId }) {
   const [productos, setProductos] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(formVacio);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); cargarProductos(); }, [bancalId]);
 
@@ -44,16 +48,27 @@ export default function TratamientoTab({ bancalId, fincaId }) {
       plaga_enfermedad: form.plaga_enfermedad || null,
       observaciones: form.observaciones || null
     };
-    await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/tratamientos', body);
-    setShowForm(false);
-    setForm(formVacio);
-    cargar();
+    try {
+      await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/tratamientos', body);
+      setShowForm(false);
+      setForm(formVacio);
+      showToast('Tratamiento creado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al crear tratamiento', 'error');
+    }
   }
 
   async function eliminar(id) {
-    if (!confirm('Eliminar este tratamiento?')) return;
-    await api.del('/tratamientos/' + id);
-    cargar();
+    const ok = await confirm('Eliminar tratamiento', '¿Desea eliminar este tratamiento?');
+    if (!ok) return;
+    try {
+      await api.del('/tratamientos/' + id);
+      showToast('Tratamiento eliminado correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar tratamiento', 'error');
+    }
   }
 
   function diasRestantes(fecha, periodo) {

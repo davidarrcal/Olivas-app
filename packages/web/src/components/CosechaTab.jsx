@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const METODOS = [
   { valor: 'vareo', etiqueta: 'Vareo' },
@@ -15,6 +17,8 @@ export default function CosechaTab({ bancalId, fincaId }) {
   const [cosechas, setCosechas] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(formVacio);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); }, [bancalId]);
 
@@ -25,20 +29,33 @@ export default function CosechaTab({ bancalId, fincaId }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/cosechas', {
-      fecha: form.fecha,
-      metodo_recoleccion: form.metodo_recoleccion,
-      kg_totales: Number(form.kg_totales),
-      rendimiento_graso_pct: form.rendimiento_graso_pct ? Number(form.rendimiento_graso_pct) : null,
-      almazara: form.almazara || null,
-      observaciones: form.observaciones || null
-    });
-    setShowForm(false); setForm(formVacio); cargar();
+    try {
+      await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/cosechas', {
+        fecha: form.fecha,
+        metodo_recoleccion: form.metodo_recoleccion,
+        kg_totales: Number(form.kg_totales),
+        rendimiento_graso_pct: form.rendimiento_graso_pct ? Number(form.rendimiento_graso_pct) : null,
+        almazara: form.almazara || null,
+        observaciones: form.observaciones || null
+      });
+      setShowForm(false); setForm(formVacio);
+      showToast('Cosecha creada correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al crear cosecha', 'error');
+    }
   }
 
   async function eliminar(id) {
-    if (!confirm('Eliminar esta cosecha?')) return;
-    await api.del('/cosechas/' + id); cargar();
+    const ok = await confirm('Eliminar cosecha', '¿Desea eliminar esta cosecha?');
+    if (!ok) return;
+    try {
+      await api.del('/cosechas/' + id);
+      showToast('Cosecha eliminada correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar cosecha', 'error');
+    }
   }
 
   const totalKg = cosechas.reduce((sum, c) => sum + c.kg_totales, 0);

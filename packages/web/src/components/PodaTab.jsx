@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import { useConfirm } from '../hooks/useConfirm';
+import { useToast } from '../hooks/useToast';
 
 const TIPOS_PODA = [
   { valor: 'formacion', etiqueta: 'Formacion' },
@@ -15,6 +17,8 @@ export default function PodaTab({ bancalId, fincaId }) {
   const [podas, setPodas] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(formVacio);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => { cargar(); }, [bancalId]);
 
@@ -25,18 +29,31 @@ export default function PodaTab({ bancalId, fincaId }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/podas', {
-      fecha: form.fecha,
-      tipo: form.tipo,
-      volumen_lena_kg: form.volumen_lena_kg ? Number(form.volumen_lena_kg) : null,
-      observaciones: form.observaciones || null
-    });
-    setShowForm(false); setForm(formVacio); cargar();
+    try {
+      await api.post('/fincas/' + fincaId + '/bancales/' + bancalId + '/podas', {
+        fecha: form.fecha,
+        tipo: form.tipo,
+        volumen_lena_kg: form.volumen_lena_kg ? Number(form.volumen_lena_kg) : null,
+        observaciones: form.observaciones || null
+      });
+      setShowForm(false); setForm(formVacio);
+      showToast('Poda creada correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al crear poda', 'error');
+    }
   }
 
   async function eliminar(id) {
-    if (!confirm('Eliminar esta poda?')) return;
-    await api.del('/podas/' + id); cargar();
+    const ok = await confirm('Eliminar poda', '¿Desea eliminar esta poda?');
+    if (!ok) return;
+    try {
+      await api.del('/podas/' + id);
+      showToast('Poda eliminada correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar poda', 'error');
+    }
   }
 
   return (
