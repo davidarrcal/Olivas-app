@@ -34,7 +34,9 @@ async function request(endpoint, options = {}) {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || data.message || `Error ${response.status}`);
+      const msg = data.error || data.message || `Error ${response.status}`;
+      const details = data.detalles ? data.detalles.join('. ') : '';
+      throw new Error(details ? `${msg}: ${details}` : msg);
     }
 
     return data;
