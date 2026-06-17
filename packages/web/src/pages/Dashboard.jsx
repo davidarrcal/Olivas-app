@@ -134,8 +134,8 @@ export default function Dashboard() {
           )}
 
           <div style={{ marginTop: '1rem' }}>
-            <Link to={'/fincas/' + fincaId + '/economia'} className="btn btn-secondary" style={{ marginRight: '0.5rem' }}>Economia</Link>
-            <Link to={'/fincas/' + fincaId + '/calendario'} className="btn btn-secondary">Calendario</Link>
+            <Link to="/economia" className="btn btn-secondary" style={{ marginRight: '0.5rem' }}>Economia</Link>
+            <Link to="/calendario" className="btn btn-secondary">Calendario</Link>
           </div>
         </div>
       </div>

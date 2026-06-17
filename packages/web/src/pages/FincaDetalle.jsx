@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import api from '../api';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../hooks/useToast';
