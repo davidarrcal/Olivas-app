@@ -19,6 +19,9 @@ const router = Router({ mergeParams: true });
 router.get('/resumen', meteoController.resumen);
 router.get('/aemet', async (req, res) => {
   try {
+    if (!process.env.AEMET_API_KEY) {
+      return res.status(400).json({ error: 'AEMET_API_KEY no configurada', details: 'Anade AEMET_API_KEY en las variables de entorno de Render' });
+    }
     const prediccion = await aemetService.getPrediccionSemana();
     res.json(prediccion);
   } catch (err) {
@@ -27,8 +30,11 @@ router.get('/aemet', async (req, res) => {
 });
 router.post('/importar-aemet', async (req, res) => {
   try {
+    if (!process.env.AEMET_API_KEY) {
+      return res.status(400).json({ error: 'AEMET_API_KEY no configurada. Anadela en las variables de entorno de Render.', details: 'AEMET_API_KEY is empty' });
+    }
     const datos = await aemetService.getPrediccionHoy();
-    if (!datos) return res.status(404).json({ error: 'No hay datos de AEMET disponibles' });
+    if (!datos) return res.status(502).json({ error: 'No se pudieron obtener datos de AEMET. Intentalo en unos minutos (rate limit).', details: 'AEMET returned no data' });
     const prisma = require('../prisma');
     const fincaId = Number(req.params.fincaId);
     const fecha = new Date(datos.fecha);
