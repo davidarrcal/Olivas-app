@@ -1,40 +1,46 @@
 const AEMET_API_KEY = process.env.AEMET_API_KEY || '';
 const AEMET_MUNICIPIO = process.env.AEMET_MUNICIPIO || '18098';
-const AEMET_BASE = 'https://opendata.aemet.es/opendata';
 
-async function fetchAemet(url) {
+async function fetchAemetJson(url) {
   const res = await fetch(url, {
     headers: { 'api_key': AEMET_API_KEY }
   });
-  if (!res.ok) throw new Error(`AEMET error ${res.status}: ${res.statusText}`);
-  const json = await res.json();
-  if (json.datos) {
-    const datosRes = await fetch(json.datos);
-    return await datosRes.json();
+  if (!res.ok) {
+    if (res.status === 429) throw new Error('AEMET: demasiadas peticiones. Intentalo en unos minutos.');
+    throw new Error(`AEMET error ${res.status}`);
   }
-  if (json.estado === 200 && Array.isArray(json)) return json;
-  throw new Error(json.descripcion || 'Error desconocido AEMET');
+  const json = await res.json();
+  if (json.estado === 429) throw new Error('AEMET: demasiadas peticiones. Intentalo en unos minutos.');
+  if (json.estado && json.estado !== 200) throw new Error(json.descripcion || `AEMET error ${json.estado}`);
+  return json;
 }
 
 async function getPrediccionSemana() {
   if (!AEMET_API_KEY) return [];
   try {
-    const prediccion = await fetchAemet(
-      `${AEMET_BASE}/prediccion/especifica/municipio/diaria/${AEMET_MUNICIPIO}`
+    const index = await fetchAemetJson(
+      `https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/diaria/${AEMET_MUNICIPIO}`
     );
-    if (!prediccion || !prediccion.length) return [];
+    if (!index.datos) return [];
+    const datosRes = await fetch(index.datos);
+    if (!datosRes.ok) throw new Error(`AEMET datos error ${datosRes.status}`);
+    const prediccion = await datosRes.json();
+    if (!Array.isArray(prediccion) || prediccion.length === 0) return [];
     const hoy = new Date();
-    return prediccion.filter(dia => new Date(dia.fecha) >= new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1)).slice(0, 7).map(dia => {
+    hoy.setHours(0, 0, 0, 0);
+    return prediccion.filter(dia => new Date(dia.fecha) >= new Date(hoy.getTime() - 86400000)).slice(0, 7).map(dia => {
       const temp = dia.temperatura || {};
       const probPrecip = dia.probPrecipitacion || [];
       const estadoCielo = dia.estadoCielo || [];
+      const sensTermica = dia.sensTermica || {};
+      const humedad = dia.humedadRelativa || {};
       return {
         fecha: dia.fecha,
-        temp_max: temp.maxima ?? null,
-        temp_min: temp.minima ?? null,
-        lluvia_mm: dia.precipitacion ? dia.precipitacion.valor ?? null : null,
-        humedad_pct: dia.humedadRelativa ? dia.humedadRelativa.maxima ?? null : null,
-        viento: dia.viento ? dia.viento.velocidadMaxima ?? null : null,
+        temp_max: temp.maxima ?? sensTermica.maxima ?? null,
+        temp_min: temp.minima ?? sensTermica.minima ?? null,
+        lluvia_mm: null,
+        humedad_pct: humedad.maxima ?? null,
+        viento: dia.viento?.velocidadMaxima?.length > 0 ? dia.viento.velocidadMaxima[0].valor : null,
         estado_cielo: estadoCielo.length > 0 ? estadoCielo[0].descripcion : null,
         prob_precipitacion: probPrecip.length > 0 ? probPrecip[0].valor : null,
         fuente: 'aemet'
