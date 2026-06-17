@@ -92,7 +92,7 @@ export default function Meteo() {
     const ok = await confirm('Eliminar registro', 'Desea eliminar este registro meteorologico?');
     if (!ok) return;
     try {
-      await api.del('/meteo/' + id);
+      await api.del('/fincas/' + fincaId + '/meteo/' + id);
       showToast('Registro meteorologico eliminado correctamente');
       cargar();
     } catch (err) {
