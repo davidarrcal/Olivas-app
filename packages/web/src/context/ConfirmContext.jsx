@@ -22,7 +22,7 @@ export function ConfirmProvider({ children }) {
   }, [state.resolve]);
 
   return (
-    <ConfirmContext.Provider value={confirm}>
+    <ConfirmContext.Provider value={{ confirm }}>
       {children}
       {state.open && (
         <div className="modal-overlay" onClick={handleCancel}>
