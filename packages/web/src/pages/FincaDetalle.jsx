@@ -18,7 +18,9 @@ export default function FincaDetalle() {
   const { id } = useParams();
   const [finca, setFinca] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showEditFinca, setShowEditFinca] = useState(false);
   const [form, setForm] = useState(formBancalVacio);
+  const [formFinca, setFormFinca] = useState({ nombre: '', ubicacion: '', altitud: '', superficie_total: '' });
   const { confirm } = useConfirm();
   const { showToast } = useToast();
 
@@ -27,6 +29,23 @@ export default function FincaDetalle() {
   async function cargar() {
     const data = await api.get(`/fincas/${id}`);
     setFinca(data);
+  }
+
+  async function editarFinca(e) {
+    e.preventDefault();
+    try {
+      await api.put(`/fincas/${id}`, {
+        nombre: formFinca.nombre,
+        ubicacion: formFinca.ubicacion || null,
+        altitud: formFinca.altitud ? Number(formFinca.altitud) : null,
+        superficie_total: formFinca.superficie_total ? Number(formFinca.superficie_total) : null
+      });
+      setShowEditFinca(false);
+      showToast('Finca actualizada correctamente');
+      cargar();
+    } catch (err) {
+      showToast(err.message || 'Error al actualizar finca', 'error');
+    }
   }
 
   async function crearBancal(e) {
@@ -51,7 +70,7 @@ export default function FincaDetalle() {
   }
 
   async function eliminarBancal(bancalId) {
-    const ok = await confirm('Eliminar bancal', '¿Desea eliminar este bancal y todos sus datos asociados?');
+    const ok = await confirm('Eliminar bancal', 'Desea eliminar este bancal y todos sus datos asociados?');
     if (!ok) return;
     try {
       await api.del(`/fincas/${id}/bancales/${bancalId}`);
@@ -71,7 +90,10 @@ export default function FincaDetalle() {
           <h2>{finca.nombre}</h2>
           <p style={{ color: 'var(--gris-medio)' }}>{finca.ubicacion} | Altitud: {finca.altitud || '-'} m | {finca.superficie_total || '-'} ha</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Nuevo Bancal</button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn-secondary btn-sm" onClick={() => { setFormFinca({ nombre: finca.nombre, ubicacion: finca.ubicacion || '', altitud: finca.altitud || '', superficie_total: finca.superficie_total || '' }); setShowEditFinca(true); }}>Editar finca</button>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Nuevo Bancal</button>
+        </div>
       </div>
 
       <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -138,7 +160,7 @@ export default function FincaDetalle() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Marco de plantación</label>
+                  <label>Marco de plantacion</label>
                   <input value={form.marco_plantacion} onChange={e => setForm({ ...form, marco_plantacion: e.target.value })} placeholder="Ej: 7x4" />
                 </div>
               </div>
@@ -149,6 +171,26 @@ export default function FincaDetalle() {
               <div className="modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancelar</button>
                 <button type="submit" className="btn btn-primary">Crear</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditFinca && (
+        <div className="modal-overlay" onClick={() => setShowEditFinca(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Editar Finca</h3>
+            <form onSubmit={editarFinca}>
+              <div className="form-group"><label>Nombre *</label><input required value={formFinca.nombre} onChange={e => setFormFinca({...formFinca, nombre: e.target.value})} /></div>
+              <div className="form-group"><label>Ubicacion</label><input value={formFinca.ubicacion} onChange={e => setFormFinca({...formFinca, ubicacion: e.target.value})} placeholder="Ej: Jaen, Andalucia" /></div>
+              <div className="form-row">
+                <div className="form-group"><label>Altitud (m)</label><input type="number" value={formFinca.altitud} onChange={e => setFormFinca({...formFinca, altitud: e.target.value})} /></div>
+                <div className="form-group"><label>Superficie total (ha)</label><input type="number" step="0.1" value={formFinca.superficie_total} onChange={e => setFormFinca({...formFinca, superficie_total: e.target.value})} /></div>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowEditFinca(false)}>Cancelar</button>
+                <button type="submit" className="btn btn-primary">Guardar</button>
               </div>
             </form>
           </div>
