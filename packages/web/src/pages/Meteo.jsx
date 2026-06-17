@@ -63,7 +63,14 @@ export default function Meteo() {
       showToast('Datos de AEMET importados correctamente');
       cargar();
     } catch (err) {
-      showToast(err.message || 'Error al importar datos de AEMET', 'error');
+      const msg = err.message || '';
+      if (msg.includes('limite') || msg.includes('rate limit') || msg.includes('429') || msg.includes('502')) {
+        showToast('AEMET: limite de peticiones excedido. Intentalo en 1-2 minutos.', 'error');
+      } else if (msg.includes('no configurada') || msg.includes('AEMET_API_KEY')) {
+        showToast('AEMET no configurada. Contacta al administrador.', 'error');
+      } else {
+        showToast(msg || 'Error al importar datos de AEMET', 'error');
+      }
     }
     setLoadingAemet(false);
   }
