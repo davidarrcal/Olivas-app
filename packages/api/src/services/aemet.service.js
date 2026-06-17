@@ -1,43 +1,19 @@
 const AEMET_API_KEY = process.env.AEMET_API_KEY || '';
 const AEMET_MUNICIPIO = process.env.AEMET_MUNICIPIO || '18098';
-const AEMET_BASE = 'https://opendata.aemet.es/opendapi/api';
+const AEMET_BASE = 'https://opendata.aemet.es/opendata';
 
 async function fetchAemet(url) {
   const res = await fetch(url, {
     headers: { 'api_key': AEMET_API_KEY }
   });
-  if (!res.ok) throw new Error(`AEMET error ${res.status}`);
-  const data = await res.json();
-  if (data.datos) {
-    const datosRes = await fetch(data.datos);
+  if (!res.ok) throw new Error(`AEMET error ${res.status}: ${res.statusText}`);
+  const json = await res.json();
+  if (json.datos) {
+    const datosRes = await fetch(json.datos);
     return await datosRes.json();
   }
-  return data;
-}
-
-async function getPrediccionHoy() {
-  if (!AEMET_API_KEY) return null;
-  try {
-    const prediccion = await fetchAemet(
-      `${AEMET_BASE}/prediccion/especifica/municipio/diaria/${AEMET_MUNICIPIO}`
-    );
-    if (!prediccion || !prediccion.length) return null;
-    const hoy = prediccion[0];
-    return {
-      fecha: hoy.fecha,
-      temp_max: hoy.temperatura?.maxima ?? null,
-      temp_min: hoy.temperatura?.minima ?? null,
-      lluvia_mm: hoy.precipitacion?.valor ?? null,
-      humedad_pct: hoy.humedadRelativa?.maxima ?? null,
-      viento: hoy.viento?. velocidadMaxima ?? null,
-      estado_cielo: hoy.estadoCielo?.[0]?.descripcion ?? null,
-      fuente: 'aemet',
-      origen: 'AEMET Zujar (Granada)'
-    };
-  } catch (err) {
-    console.error('Error AEMET prediccion:', err.message);
-    return null;
-  }
+  if (json.estado === 200 && Array.isArray(json)) return json;
+  throw new Error(json.descripcion || 'Error desconocido AEMET');
 }
 
 async function getPrediccionSemana() {
@@ -47,21 +23,32 @@ async function getPrediccionSemana() {
       `${AEMET_BASE}/prediccion/especifica/municipio/diaria/${AEMET_MUNICIPIO}`
     );
     if (!prediccion || !prediccion.length) return [];
-    return prediccion.map(dia => ({
-      fecha: dia.fecha,
-      temp_max: dia.temperatura?.maxima ?? null,
-      temp_min: dia.temperatura?.minima ?? null,
-      lluvia_mm: dia.precipitacion?.valor ?? null,
-      humedad_pct: dia.humedadRelativa?.maxima ?? null,
-      viento: dia.viento?. velocidadMaxima ?? null,
-      estado_cielo: dia.estadoCielo?.[0]?.descripcion ?? null,
-      prob_precipitacion: dia.probPrecipitacion?.[0]?.valor ?? null,
-      fuente: 'aemet'
-    }));
+    const hoy = new Date();
+    return prediccion.filter(dia => new Date(dia.fecha) >= new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1)).slice(0, 7).map(dia => {
+      const temp = dia.temperatura || {};
+      const probPrecip = dia.probPrecipitacion || [];
+      const estadoCielo = dia.estadoCielo || [];
+      return {
+        fecha: dia.fecha,
+        temp_max: temp.maxima ?? null,
+        temp_min: temp.minima ?? null,
+        lluvia_mm: dia.precipitacion ? dia.precipitacion.valor ?? null : null,
+        humedad_pct: dia.humedadRelativa ? dia.humedadRelativa.maxima ?? null : null,
+        viento: dia.viento ? dia.viento.velocidadMaxima ?? null : null,
+        estado_cielo: estadoCielo.length > 0 ? estadoCielo[0].descripcion : null,
+        prob_precipitacion: probPrecip.length > 0 ? probPrecip[0].valor : null,
+        fuente: 'aemet'
+      };
+    });
   } catch (err) {
-    console.error('Error AEMET semana:', err.message);
+    console.error('Error AEMET prediccion:', err.message);
     return [];
   }
+}
+
+async function getPrediccionHoy() {
+  const prediccion = await getPrediccionSemana();
+  return prediccion.length > 0 ? prediccion[0] : null;
 }
 
 module.exports = { getPrediccionHoy, getPrediccionSemana };
