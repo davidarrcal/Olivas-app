@@ -2,9 +2,6 @@
   "name": "olivas-app",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "packages/api"
-  ],
   "scripts": {
     "api": "npm run dev --workspace=packages/api",
     "api:migrate": "npm run migrate --workspace=packages/api",
