@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import api from '../api';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../hooks/useToast';
@@ -94,15 +94,6 @@ export default function FincaDetalle() {
           <button className="btn btn-secondary btn-sm" onClick={() => { setFormFinca({ nombre: finca.nombre, ubicacion: finca.ubicacion || '', altitud: finca.altitud || '', superficie_total: finca.superficie_total || '' }); setShowEditFinca(true); }}>Editar finca</button>
           <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Nuevo Bancal</button>
         </div>
-      </div>
-
-      <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-        <Link to={'/fincas/' + id + '/meteo'} className="btn btn-secondary">Meteorologia</Link>
-        <Link to={'/fincas/' + id + '/economia'} className="btn btn-secondary">Economia</Link>
-        <Link to={'/fincas/' + id + '/maquinaria'} className="btn btn-secondary">Maquinaria</Link>
-        <Link to={'/fincas/' + id + '/inventario'} className="btn btn-secondary">Inventario</Link>
-        <Link to={'/fincas/' + id + '/calendario'} className="btn btn-secondary">Calendario</Link>
-        <Link to={'/fincas/' + id + '/informes'} className="btn btn-secondary">Informes</Link>
       </div>
 
       {finca.bancales?.length === 0 ? (

@@ -51,14 +51,14 @@ function AppRoutes() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/fincas" element={<Fincas />} />
         <Route path="/fincas/:id" element={<FincaDetalle />} />
-        <Route path="/fincas/:id/meteo" element={<Meteo />} />
-        <Route path="/fincas/:id/economia" element={<Economia />} />
-        <Route path="/fincas/:id/maquinaria" element={<Maquinaria />} />
-        <Route path="/fincas/:id/inventario" element={<Inventario />} />
-        <Route path="/fincas/:id/calendario" element={<Calendario />} />
-        <Route path="/fincas/:id/informes" element={<Informes />} />
         <Route path="/bancales/:id" element={<BancalDetalle />} />
         <Route path="/productos" element={<Productos />} />
+        <Route path="/meteo" element={<Meteo />} />
+        <Route path="/economia" element={<Economia />} />
+        <Route path="/maquinaria" element={<Maquinaria />} />
+        <Route path="/inventario" element={<Inventario />} />
+        <Route path="/calendario" element={<Calendario />} />
+        <Route path="/informes" element={<Informes />} />
       </Route>
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

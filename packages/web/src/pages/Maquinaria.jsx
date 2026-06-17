@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import api from '../api';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../hooks/useToast';
@@ -9,7 +8,12 @@ const formVacio = { nombre: '', tipo: '', horas_actuales: '', observaciones: '' 
 const formMantVacio = { fecha: fechaHoy(), tipo: '', descripcion: '', proximo_aviso_horas: '', coste: '' };
 
 export default function Maquinaria() {
-  const { id: fincaId } = useParams();
+  const [fincaId, setFincaId] = useState(null);
+  useEffect(() => {
+    api.get('/fincas').then(fincas => {
+      if (fincas.length > 0) setFincaId(fincas[0].id);
+    });
+  }, []);
   const [maquinas, setMaquinas] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showMantForm, setShowMantForm] = useState(null);
@@ -18,7 +22,7 @@ export default function Maquinaria() {
   const { confirm } = useConfirm();
   const { showToast } = useToast();
 
-  useEffect(() => { cargar(); }, [fincaId]);
+  useEffect(() => { if (fincaId) cargar(); }, [fincaId]);
 
   async function cargar() {
     const data = await api.get('/fincas/' + fincaId + '/maquinaria');
@@ -82,6 +86,8 @@ export default function Maquinaria() {
       showToast(err.message || 'Error al eliminar mantenimiento', 'error');
     }
   }
+
+  if (!fincaId) return <div className="empty-state"><p>Cargando...</p></div>;
 
   return (
     <div>

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import api from '../api';
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -27,11 +26,16 @@ const RECOMENDACIONES = [
 ];
 
 export default function Calendario() {
-  const { id: fincaId } = useParams();
+  const [fincaId, setFincaId] = useState(null);
+  useEffect(() => {
+    api.get('/fincas').then(fincas => {
+      if (fincas.length > 0) setFincaId(fincas[0].id);
+    });
+  }, []);
   const [data, setData] = useState(null);
   const [mesSeleccionado, setMesSeleccionado] = useState(new Date().getMonth());
 
-  useEffect(() => { cargar(); }, [fincaId]);
+  useEffect(() => { if (fincaId) cargar(); }, [fincaId]);
 
   async function cargar() {
     try {
@@ -47,13 +51,12 @@ export default function Calendario() {
 
   const recomendacion = RECOMENDACIONES.find(r => r.mes === mesSeleccionado);
 
+  if (!fincaId) return <div className="empty-state"><p>Cargando...</p></div>;
+
   return (
     <div>
       <div className="page-header">
-        <div>
-          <h2>Calendario Agricola</h2>
-          <Link to={'/fincas/' + fincaId} className="btn btn-secondary btn-sm">&larr; Volver a finca</Link>
-        </div>
+        <h2>Calendario Agricola</h2>
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>

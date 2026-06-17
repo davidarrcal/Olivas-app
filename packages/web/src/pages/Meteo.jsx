@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import api from '../api';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../hooks/useToast';
@@ -8,7 +7,12 @@ const fechaHoy = () => new Date().toISOString().split('T')[0];
 const formVacio = { fecha: fechaHoy(), temp_max: '', temp_min: '', lluvia_mm: '', humedad_pct: '', observaciones: '' };
 
 export default function Meteo() {
-  const { id: fincaId } = useParams();
+  const [fincaId, setFincaId] = useState(null);
+  useEffect(() => {
+    api.get('/fincas').then(fincas => {
+      if (fincas.length > 0) setFincaId(fincas[0].id);
+    });
+  }, []);
   const [datos, setDatos] = useState([]);
   const [resumen, setResumen] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -16,7 +20,7 @@ export default function Meteo() {
   const { confirm } = useConfirm();
   const { showToast } = useToast();
 
-  useEffect(() => { cargar(); }, [fincaId]);
+  useEffect(() => { if (fincaId) cargar(); }, [fincaId]);
 
   async function cargar() {
     const [datosData, resumenData] = await Promise.all([
@@ -61,6 +65,8 @@ export default function Meteo() {
 
   function esDiaLluvioso(d) { return d.lluvia_mm > 0; }
   function esHelada(d) { return d.temp_min !== null && d.temp_min < 0; }
+
+  if (!fincaId) return <div className="empty-state"><p>Cargando...</p></div>;
 
   return (
     <div>

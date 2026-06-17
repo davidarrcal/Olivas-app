@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import api from '../api';
 
 export default function Informes() {
-  const { id: fincaId } = useParams();
+  const [fincaId, setFincaId] = useState(null);
+  useEffect(() => {
+    api.get('/fincas').then(fincas => {
+      if (fincas.length > 0) setFincaId(fincas[0].id);
+    });
+  }, []);
   const [cosechas, setCosechas] = useState([]);
   const [gastos, setGastos] = useState([]);
   const [ingresos, setIngresos] = useState([]);
   const [riegos, setRiegos] = useState([]);
 
-  useEffect(() => { cargar(); }, [fincaId]);
+  useEffect(() => { if (fincaId) cargar(); }, [fincaId]);
 
   async function cargar() {
     const [c, g, i, r] = await Promise.all([
@@ -54,11 +58,12 @@ export default function Informes() {
 
   const years = [...new Set([...Object.keys(cosechasByYear), ...Object.keys(gastosByYear), ...Object.keys(ingresosByYear), ...Object.keys(riegosByYear)])].sort().reverse();
 
+  if (!fincaId) return <div className="empty-state"><p>Cargando...</p></div>;
+
   return (
     <div>
       <div className="page-header">
         <h2>Informes Comparativos</h2>
-        <Link to={'/fincas/' + fincaId} className="btn btn-secondary btn-sm">&larr; Volver a finca</Link>
       </div>
 
       {years.length === 0 ? (

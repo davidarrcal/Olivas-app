@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import api from '../api';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../hooks/useToast';
@@ -7,7 +6,12 @@ import { useToast } from '../hooks/useToast';
 const formVacio = { producto_id: '', stock_actual: '', stock_minimo: '', precio_compra: '', fecha_ultima_compra: '' };
 
 export default function Inventario() {
-  const { id: fincaId } = useParams();
+  const [fincaId, setFincaId] = useState(null);
+  useEffect(() => {
+    api.get('/fincas').then(fincas => {
+      if (fincas.length > 0) setFincaId(fincas[0].id);
+    });
+  }, []);
   const [inventario, setInventario] = useState([]);
   const [productos, setProductos] = useState([]);
   const [alertas, setAlertas] = useState([]);
@@ -17,7 +21,7 @@ export default function Inventario() {
   const { confirm } = useConfirm();
   const { showToast } = useToast();
 
-  useEffect(() => { cargar(); }, [fincaId]);
+  useEffect(() => { if (fincaId) cargar(); }, [fincaId]);
 
   async function cargar() {
     const [inv, prods, alert] = await Promise.all([
@@ -74,6 +78,8 @@ export default function Inventario() {
     });
     setShowForm(true);
   }
+
+  if (!fincaId) return <div className="empty-state"><p>Cargando...</p></div>;
 
   return (
     <div>

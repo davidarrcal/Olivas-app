@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import api from '../api';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../hooks/useToast';
@@ -28,7 +27,12 @@ const formGastoVacio = { fecha: fechaHoy(), concepto: '', categoria: 'abono', im
 const formIngresoVacio = { fecha: fechaHoy(), concepto: '', categoria: 'venta_aceituna', importe: '', kg_vendidos: '', precio_kg: '', observaciones: '' };
 
 export default function Economia() {
-  const { id: fincaId } = useParams();
+  const [fincaId, setFincaId] = useState(null);
+  useEffect(() => {
+    api.get('/fincas').then(fincas => {
+      if (fincas.length > 0) setFincaId(fincas[0].id);
+    });
+  }, []);
   const [tab, setTab] = useState('gastos');
   const [gastos, setGastos] = useState([]);
   const [ingresos, setIngresos] = useState([]);
@@ -40,7 +44,7 @@ export default function Economia() {
   const { confirm } = useConfirm();
   const { showToast } = useToast();
 
-  useEffect(() => { cargarTodo(); }, [fincaId]);
+  useEffect(() => { if (fincaId) cargarTodo(); }, [fincaId]);
 
   async function cargarTodo() {
     const [g, i, rg, ri, b] = await Promise.all([
@@ -114,6 +118,8 @@ export default function Economia() {
   }
 
   const beneficio = (resumenGastos?.total || 0) - (resumenIngresos?.total || 0);
+
+  if (!fincaId) return <div className="empty-state"><p>Cargando...</p></div>;
 
   return (
     <div>
