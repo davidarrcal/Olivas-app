@@ -311,6 +311,17 @@ model Ingreso {
   @@map("ingreso")
 }
 
+model Usuario {
+  id              Int      @id @default(autoincrement())
+  email           String   @unique @db.VarChar(255)
+  password_hash   String   @map("password_hash")
+  nombre          String   @db.VarChar(150)
+  fecha_creacion  DateTime @default(now()) @map("fecha_creacion")
+  fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
+
+  @@map("usuario")
+}
+
 model Config {
   id    Int    @id @default(autoincrement())
   clave String @unique @db.VarChar(100)

@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const errorHandler = require('./middleware/errorHandler');
+const authMiddleware = require('./middleware/auth');
 
+const authRoutes = require('./routes/auth.routes');
 const fincaRoutes = require('./routes/finca.routes');
 const bancalRoutes = require('./routes/bancal.routes');
 const riegoRoutes = require('./routes/riego.routes');
@@ -25,8 +27,12 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-app.get('/', (req, res) => { res.json({ app: 'Olivas API', version: '2.0.0' }); });
+app.get('/', (req, res) => { res.json({ app: 'Olivas API', version: '3.0.0' }); });
 app.get('/api/health', (req, res) => { res.json({ estado: 'ok', timestamp: new Date().toISOString() }); });
+
+app.use('/api/auth', authRoutes);
+
+app.use('/api', authMiddleware);
 
 app.use('/api/fincas', fincaRoutes);
 app.use('/api/fincas/:fincaId/bancales', bancalRoutes);
@@ -59,4 +65,4 @@ app.get('/api/bancales/:id', async (req, res, next) => {
 });
 
 app.use(errorHandler);
-app.listen(PORT, () => { console.log('Olivas API v2 arrancada en http://localhost:' + PORT); });
+app.listen(PORT, () => { console.log('Olivas API v3 arrancada en http://localhost:' + PORT); });

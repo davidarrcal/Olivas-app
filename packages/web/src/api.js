@@ -1,11 +1,19 @@
 const API_BASE = 'https://olivas-api.onrender.com/api';
 
+function getToken() {
+  return localStorage.getItem('olivas_token');
+}
+
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
-  const config = {
-    headers: { 'Content-Type': 'application/json' },
-    ...options
-  };
+  const headers = { 'Content-Type': 'application/json' };
+
+  const token = getToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const config = { headers, ...options };
 
   if (options.body) {
     config.body = JSON.stringify(options.body);
@@ -13,6 +21,13 @@ async function request(endpoint, options = {}) {
 
   try {
     const response = await fetch(url, config);
+
+    if (response.status === 401) {
+      localStorage.removeItem('olivas_token');
+      localStorage.removeItem('olivas_user');
+      window.location.href = '/';
+      return;
+    }
 
     if (response.status === 204) return null;
 
