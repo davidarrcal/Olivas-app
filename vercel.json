@@ -1,9 +1,9 @@
 {
   "buildCommand": "cd packages/web && npm install && npm run build",
   "outputDirectory": "packages/web/dist",
-  "routes": [
-    { "src": "/api/(.*)", "dest": "https://olivas-api.onrender.com/api/$1" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "installCommand": "npm install",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://olivas-api.onrender.com/api/$1" }
   ]
 }
