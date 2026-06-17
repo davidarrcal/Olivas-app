@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Finca {
+  id               Int      @id @default(autoincrement())
+  nombre           String   @unique @db.VarChar(150)
+  ubicacion        String?  @db.VarChar(255)
+  altitud          Int?
+  latitud          Float?
+  longitud         Float?
+  superficie_total Float?   @db.DoublePrecision
+  fecha_creacion   DateTime @default(now()) @map("fecha_creacion")
+  fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
+
+  bancales    Bancal[]
+  meteo_datos MeteoDatos[]
+  maquinarias Maquinaria[]
+  gastos      Gasto[]
+  ingresos    Ingreso[]
+  inventarios Inventario[]
+
+  @@map("finca")
+}
+
+model Bancal {
+  id             Int      @id @default(autoincrement())
+  finca_id       Int      @map("finca_id")
+  nombre         String   @db.VarChar(150)
+  superficie     Float?   @db.DoublePrecision
+  textura_suelo  String?  @db.VarChar(50)
+  pendiente      Float?   @db.DoublePrecision
+  marco_plantacion String? @db.VarChar(20) @map("marco_plantacion")
+  observaciones  String?  @db.Text
+  fecha_creacion DateTime @default(now()) @map("fecha_creacion")
+  fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
+
+  finca            Finca             @relation(fields: [finca_id], references: [id], onDelete: Cascade)
+  variedades       VariedadBancal[]
+  riegos           Riego[]
+  abonados         Abonado[]
+  tratamientos     Tratamiento[]
+  podas            Poda[]
+  cosechas         Cosecha[]
+  analisis         Analisis[]
+  diario_campo     DiarioCampo[]
+  gastos           Gasto[]
+
+  @@map("bancal")
+}
+
+model VariedadBancal {
+  id                  Int      @id @default(autoincrement())
+  bancal_id           Int      @map("bancal_id")
+  variedad            String   @db.VarChar(100)
+  num_arboles         Int      @map("num_arboles")
+  ano_plantacion      Int?     @map("ano_plantacion")
+  produccion_estimada Float?   @db.DoublePrecision @map("produccion_estimada")
+  observaciones       String?  @db.Text
+  fecha_creacion      DateTime @default(now()) @map("fecha_creacion")
+  fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
+
+  bancal Bancal @relation(fields: [bancal_id], references: [id], onDelete: Cascade)
+
+  @@map("variedad_bancal")
+}
+
+model Riego {
+  id               Int      @id @default(autoincrement())
+  bancal_id        Int      @map("bancal_id")
+  fecha_inicio     DateTime @map("fecha_inicio")
+  fecha_fin        DateTime? @map("fecha_fin")
+  volumen_m3       Float?   @db.DoublePrecision @map("volumen_m3")
+  precipitacion_mm Float?   @db.DoublePrecision @map("precipitacion_mm")
+  etp              Float?   @db.DoublePrecision
+  humedad_suelo_pct Float?  @db.DoublePrecision @map("humedad_suelo_pct")
+  observaciones    String?  @db.Text
+  fecha_creacion   DateTime @default(now()) @map("fecha_creacion")
+
+  bancal Bancal @relation(fields: [bancal_id], references: [id], onDelete: Cascade)
+
+  @@map("riego")
+}
+
+model Producto {
+  id              Int      @id @default(autoincrement())
+  nombre          String   @unique @db.VarChar(200)
+  tipo            String   @db.VarChar(50)
+  composicion     String?  @db.VarChar(255)
+  unidad_medida   String   @db.VarChar(20) @map("unidad_medida")
+  precio_unitario Float?   @db.DoublePrecision @map("precio_unitario")
+  observaciones   String?  @db.Text
+  fecha_creacion  DateTime @default(now()) @map("fecha_creacion")
+  fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
+
+  abonados      Abonado[]
+  tratamientos  Tratamiento[]
+  inventarios   Inventario[]
+
+  @@map("producto")
+}
+
+model Abonado {
+  id                 Int      @id @default(autoincrement())
+  bancal_id          Int      @map("bancal_id")
+  producto_id        Int?     @map("producto_id")
+  fecha              DateTime @db.Date
+  tipo               String   @db.VarChar(50)
+  npk                String?  @db.VarChar(50)
+  dosis              Float?   @db.DoublePrecision
+  dosis_unidad       String?  @db.VarChar(20) @map("dosis_unidad")
+  estado_fenologico  String?  @db.VarChar(50) @map("estado_fenologico")
+  observaciones      String?  @db.Text
+  fecha_creacion     DateTime @default(now()) @map("fecha_creacion")
+
+  bancal   Bancal   @relation(fields: [bancal_id], references: [id], onDelete: Cascade)
+  producto Producto? @relation(fields: [producto_id], references: [id], onDelete: SetNull)
+
+  @@map("abonado")
+}
+
+model Tratamiento {
+  id                    Int      @id @default(autoincrement())
+  bancal_id             Int      @map("bancal_id")
+  producto_id           Int?     @map("producto_id")
+  fecha                 DateTime @db.Date
+  dosis                 String?  @db.VarChar(100)
+  periodo_seguridad_dias Int?    @map("periodo_seguridad_dias")
+  plaga_enfermedad      String?  @db.VarChar(200) @map("plaga_enfermedad")
+  observaciones         String?  @db.Text
+  fecha_creacion        DateTime @default(now()) @map("fecha_creacion")
+
+  bancal   Bancal    @relation(fields: [bancal_id], references: [id], onDelete: Cascade)
+  producto Producto? @relation(fields: [producto_id], references: [id], onDelete: SetNull)
+
+  @@map("tratamiento")
+}
+
+model Poda {
+  id              Int      @id @default(autoincrement())
+  bancal_id       Int      @map("bancal_id")
+  fecha           DateTime @db.Date
+  tipo            String   @db.VarChar(50)
+  volumen_lena_kg Float?  @db.DoublePrecision @map("volumen_lena_kg")
+  observaciones   String?  @db.Text
+  fecha_creacion  DateTime @default(now()) @map("fecha_creacion")
+
+  bancal Bancal @relation(fields: [bancal_id], references: [id], onDelete: Cascade)
+
+  @@map("poda")
+}
+
+model Cosecha {
+  id                   Int      @id @default(autoincrement())
+  bancal_id            Int      @map("bancal_id")
+  fecha                DateTime @db.Date
+  metodo_recoleccion   String   @db.VarChar(50) @map("metodo_recoleccion")
+  kg_totales           Float    @db.DoublePrecision @map("kg_totales")
+  rendimiento_graso_pct Float?  @db.DoublePrecision @map("rendimiento_graso_pct")
+  almazara             String?  @db.VarChar(200)
+  observaciones        String?  @db.Text
+  fecha_creacion       DateTime @default(now()) @map("fecha_creacion")
+
+  bancal Bancal @relation(fields: [bancal_id], references: [id], onDelete: Cascade)
+
+  @@map("cosecha")
+}
+
+model MeteoDatos {
+  id           Int      @id @default(autoincrement())
+  finca_id     Int      @map("finca_id")
+  fecha        DateTime @db.Date
+  temp_max     Float?   @db.DoublePrecision @map("temp_max")
+  temp_min     Float?   @db.DoublePrecision @map("temp_min")
+  lluvia_mm    Float?   @db.DoublePrecision @map("lluvia_mm")
+  humedad_pct  Float?   @db.DoublePrecision @map("humedad_pct")
+  fuente       String   @default("manual") @db.VarChar(20)
+  observaciones String? @db.Text
+  fecha_creacion DateTime @default(now()) @map("fecha_creacion")
+
+  finca Finca @relation(fields: [finca_id], references: [id], onDelete: Cascade)
+
+  @@unique([finca_id, fecha])
+  @@map("meteo_datos")
+}
+
+model Analisis {
+  id              Int      @id @default(autoincrement())
+  bancal_id       Int      @map("bancal_id")
+  tipo            String   @db.VarChar(20)
+  fecha           DateTime @db.Date
+  ph              Float?   @db.DoublePrecision
+  materia_organica Float?  @db.DoublePrecision @map("materia_organica")
+  nitrogeno      Float?   @db.DoublePrecision
+  fosforo        Float?   @db.DoublePrecision
+  potasio        Float?   @db.DoublePrecision
+  boro           Float?   @db.DoublePrecision
+  zinc           Float?   @db.DoublePrecision
+  hierro         Float?   @db.DoublePrecision
+  resultados_detallados String? @db.Text @map("resultados_detallados")
+  laboratorio    String?  @db.VarChar(200)
+  recomendaciones String? @db.Text
+  observaciones  String?  @db.Text
+  fecha_creacion DateTime @default(now()) @map("fecha_creacion")
+
+  bancal Bancal @relation(fields: [bancal_id], references: [id], onDelete: Cascade)
+
+  @@map("analisis")
+}
+
+model DiarioCampo {
+  id          Int      @id @default(autoincrement())
+  bancal_id   Int      @map("bancal_id")
+  fecha       DateTime @db.Date
+  horas       Float?   @db.DoublePrecision
+  tipo_labor  String?  @db.VarChar(100) @map("tipo_labor")
+  descripcion String?  @db.Text
+  fotos       Json?
+  fecha_creacion DateTime @default(now()) @map("fecha_creacion")
+
+  bancal Bancal @relation(fields: [bancal_id], references: [id], onDelete: Cascade)
+
+  @@map("diario_campo")
+}
+
+model Inventario {
+  id               Int      @id @default(autoincrement())
+  producto_id      Int      @map("producto_id")
+  finca_id         Int      @map("finca_id")
+  stock_actual     Float    @db.DoublePrecision @map("stock_actual")
+  stock_minimo     Float?   @db.DoublePrecision @map("stock_minimo")
+  fecha_ultima_compra DateTime? @db.Date @map("fecha_ultima_compra")
+  precio_compra    Float?   @db.DoublePrecision @map("precio_compra")
+  fecha_creacion   DateTime @default(now()) @map("fecha_creacion")
+  fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
+
+  producto Producto @relation(fields: [producto_id], references: [id], onDelete: Cascade)
+  finca    Finca    @relation(fields: [finca_id], references: [id], onDelete: Cascade)
+
+  @@map("inventario")
+}
+
+model Maquinaria {
+  id            Int      @id @default(autoincrement())
+  finca_id      Int      @map("finca_id")
+  nombre        String   @db.VarChar(150)
+  tipo          String?  @db.VarChar(100)
+  horas_actuales Float?  @db.DoublePrecision @map("horas_actuales")
+  observaciones String?  @db.Text
+  fecha_creacion DateTime @default(now()) @map("fecha_creacion")
+  fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
+
+  finca         Finca          @relation(fields: [finca_id], references: [id], onDelete: Cascade)
+  mantenimientos Mantenimiento[]
+
+  @@map("maquinaria")
+}
+
+model Mantenimiento {
+  id               Int      @id @default(autoincrement())
+  maquinaria_id    Int      @map("maquinaria_id")
+  fecha            DateTime @db.Date
+  tipo             String   @db.VarChar(100)
+  descripcion      String?  @db.Text
+  proximo_aviso_horas Float? @db.DoublePrecision @map("proximo_aviso_horas")
+  coste            Float?   @db.DoublePrecision
+  fecha_creacion   DateTime @default(now()) @map("fecha_creacion")
+
+  maquinaria Maquinaria @relation(fields: [maquinaria_id], references: [id], onDelete: Cascade)
+
+  @@map("mantenimiento")
+}
+
+model Gasto {
+  id            Int      @id @default(autoincrement())
+  finca_id      Int      @map("finca_id")
+  bancal_id     Int?     @map("bancal_id")
+  fecha         DateTime @db.Date
+  concepto      String   @db.VarChar(255)
+  categoria     String   @db.VarChar(50)
+  importe       Float    @db.DoublePrecision
+  observaciones String?  @db.Text
+  fecha_creacion DateTime @default(now()) @map("fecha_creacion")
+
+  finca   Finca   @relation(fields: [finca_id], references: [id], onDelete: Cascade)
+  bancal  Bancal? @relation(fields: [bancal_id], references: [id], onDelete: SetNull)
+
+  @@map("gasto")
+}
+
+model Ingreso {
+  id            Int      @id @default(autoincrement())
+  finca_id      Int      @map("finca_id")
+  fecha         DateTime @db.Date
+  concepto      String   @db.VarChar(255)
+  categoria     String   @db.VarChar(50)
+  importe       Float    @db.DoublePrecision
+  kg_vendidos   Float?   @db.DoublePrecision @map("kg_vendidos")
+  precio_kg     Float?   @db.DoublePrecision @map("precio_kg")
+  observaciones String?  @db.Text
+  fecha_creacion DateTime @default(now()) @map("fecha_creacion")
+
+  finca Finca @relation(fields: [finca_id], references: [id], onDelete: Cascade)
+
+  @@map("ingreso")
+}
+
+model Config {
+  id    Int    @id @default(autoincrement())
+  clave String @unique @db.VarChar(100)
+  valor String @db.Text
+
+  @@map("config")
+}

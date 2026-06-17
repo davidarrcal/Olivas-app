@@ -1,0 +1,25 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "migrate": "npx prisma migrate dev",
+    "migrate:reset": "npx prisma migrate reset",
+    "seed": "node prisma/seed.js",
+    "studio": "npx prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.7.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "joi": "^18.2.1",
+    "shared": "file:../shared"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9",
+    "prisma": "^6.7.0"
+  }
+}

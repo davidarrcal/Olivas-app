@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: olivas-api
+    runtime: node
+    plan: free
+    buildCommand: cd packages/api && npm install && npx prisma generate
+    startCommand: cd packages/api && npx prisma migrate deploy && node src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: PORT
+        value: 10000
+      - key: FRONTEND_URL
+        sync: false
