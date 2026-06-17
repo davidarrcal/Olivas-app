@@ -22,11 +22,7 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const corsOptions = process.env.NODE_ENV === 'production'
-  ? { origin: [process.env.FRONTEND_URL || 'https://olivas-web.vercel.app', 'http://localhost:5173'] }
-  : { origin: true };
-
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 app.get('/', (req, res) => { res.json({ app: 'Olivas API', version: '2.0.0' }); });
