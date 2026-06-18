@@ -19,6 +19,39 @@ async function fetchAemetJson(url) {
   return json;
 }
 
+function parseDia(dia) {
+  const temp = dia.temperatura || {};
+  const st = dia.sensTermica || {};
+  const probPrecip = dia.probPrecipitacion || [];
+  const estadoCielo = dia.estadoCielo || [];
+  const humedad = dia.humedadRelativa || [];
+  const tempMax = temp.maxima ?? st.maxima ?? null;
+  const tempMin = temp.minima ?? st.minima ?? null;
+
+  const cieloPeriodo = estadoCielo.find(e => e.periodo === '12-24' || e.periodo === '00-24') ||
+                       estadoCielo.find(e => e.descripcion && e.descripcion.trim() !== '') || 
+                       estadoCielo[estadoCielo.length - 1] || {};
+
+  const humedadMax = humedad.length > 0
+    ? Math.max(...humedad.filter(h => h.value !== null && h.value !== '').map(h => Number(h.value)))
+    : null;
+
+  const precipValue = probPrecip.length > 0 ? probPrecip[0].value : null;
+  const probPrecipValue = precipValue !== null && precipValue !== '' ? Number(precipValue) : null;
+
+  return {
+    fecha: dia.fecha,
+    temp_max: tempMax,
+    temp_min: tempMin,
+    lluvia_mm: null,
+    humedad_pct: isNaN(humedadMax) ? null : humedadMax,
+    viento: dia.viento?.velocidad?.length > 0 ? dia.viento.velocidad[0]?.value ?? null : null,
+    estado_cielo: cieloPeriodo.descripcion || null,
+    prob_precipitacion: probPrecipValue,
+    fuente: 'aemet'
+  };
+}
+
 async function getPrediccionSemana() {
   if (!AEMET_API_KEY) return [];
   const now = Date.now();
@@ -32,27 +65,20 @@ async function getPrediccionSemana() {
     if (!index.datos) return [];
     const datosRes = await fetch(index.datos);
     if (!datosRes.ok) throw new Error(`AEMET datos error ${datosRes.status}`);
-    const prediccion = await datosRes.json();
-    if (!Array.isArray(prediccion) || prediccion.length === 0) return [];
+    const body = await datosRes.json();
+    if (!Array.isArray(body) || body.length === 0) return [];
+
+    const prediccion = body[0];
+    const dias = prediccion.prediccion?.dia || [];
+    if (dias.length === 0) return [];
+
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
-    const result = prediccion.filter(dia => new Date(dia.fecha) >= new Date(hoy.getTime() - 86400000)).slice(0, 7).map(dia => {
-      const temp = dia.temperatura || {};
-      const probPrecip = dia.probPrecipitacion || [];
-      const estadoCielo = dia.estadoCielo || [];
-      const humedad = dia.humedadRelativa || {};
-      return {
-        fecha: dia.fecha,
-        temp_max: temp.maxima ?? null,
-        temp_min: temp.minima ?? null,
-        lluvia_mm: null,
-        humedad_pct: humedad.maxima ?? null,
-        viento: dia.viento?.velocidadMaxima?.length > 0 ? dia.viento.velocidadMaxima[0].valor : null,
-        estado_cielo: estadoCielo.length > 0 ? estadoCielo[0].descripcion : null,
-        prob_precipitacion: probPrecip.length > 0 ? probPrecip[0].valor : null,
-        fuente: 'aemet'
-      };
-    });
+    const result = dias
+      .filter(dia => new Date(dia.fecha) >= new Date(hoy.getTime() - 86400000))
+      .slice(0, 7)
+      .map(parseDia);
+
     cachePrediccion = result;
     cacheTimestamp = now;
     return result;
