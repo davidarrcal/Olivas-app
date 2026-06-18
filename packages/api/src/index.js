@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const errorHandler = require('./middleware/errorHandler');
 const authMiddleware = require('./middleware/auth');
+const convertDates = require('./middleware/convertDates');
 
 const authRoutes = require('./routes/auth.routes');
 const fincaRoutes = require('./routes/finca.routes');
@@ -26,6 +27,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+app.use(convertDates);
 
 app.get('/', (req, res) => { res.json({ app: 'Olivas API', version: '3.0.0' }); });
 app.get('/api/health', (req, res) => { res.json({ estado: 'ok', timestamp: new Date().toISOString() }); });
