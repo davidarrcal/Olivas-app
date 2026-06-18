@@ -17,14 +17,14 @@ export default function Informes() {
 
   async function cargar() {
     const [c, g, i, r] = await Promise.all([
-      api.get('/fincas/' + fincaId + '/bancales/1/cosechas').catch(() => []).then(async () => {
+      (async () => {
         const bancales = await api.get('/fincas/' + fincaId + '/bancales');
         const allCosechas = [];
         for (const b of bancales) {
           try { const cs = await api.get('/fincas/' + fincaId + '/bancales/' + b.id + '/cosechas'); allCosechas.push(...cs); } catch(e) {}
         }
         return allCosechas;
-      }),
+      })(),
       api.get('/fincas/' + fincaId + '/gastos'),
       api.get('/fincas/' + fincaId + '/ingresos'),
       (async () => {

@@ -42,7 +42,7 @@ export default function DiarioCampoTab({ bancalId, fincaId }) {
     const ok = await confirm('Eliminar entrada', '¿Desea eliminar esta entrada del diario?');
     if (!ok) return;
     try {
-      await api.del('/diario/' + id);
+      await api.del('/fincas/' + fincaId + '/bancales/' + bancalId + '/diario/' + id);
       showToast('Entrada del diario eliminada correctamente');
       cargar();
     } catch (err) {

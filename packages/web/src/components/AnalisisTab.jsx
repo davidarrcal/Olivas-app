@@ -57,7 +57,7 @@ export default function AnalisisTab({ bancalId, fincaId }) {
     const ok = await confirm('Eliminar analisis', '¿Desea eliminar este analisis?');
     if (!ok) return;
     try {
-      await api.del('/analisis/' + id);
+      await api.del('/fincas/' + fincaId + '/bancales/' + bancalId + '/analisis/' + id);
       showToast('Analisis eliminado correctamente');
       cargar();
     } catch (err) {

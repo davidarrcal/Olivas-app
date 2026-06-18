@@ -98,7 +98,7 @@ export default function Economia() {
     const ok = await confirm('Eliminar gasto', '¿Desea eliminar este gasto?');
     if (!ok) return;
     try {
-      await api.del('/gastos/' + id);
+      await api.del('/fincas/' + fincaId + '/gastos/' + id);
       showToast('Gasto eliminado correctamente');
       cargarTodo();
     } catch (err) {
@@ -109,7 +109,7 @@ export default function Economia() {
     const ok = await confirm('Eliminar ingreso', '¿Desea eliminar este ingreso?');
     if (!ok) return;
     try {
-      await api.del('/ingresos/' + id);
+      await api.del('/fincas/' + fincaId + '/ingresos/' + id);
       showToast('Ingreso eliminado correctamente');
       cargarTodo();
     } catch (err) {

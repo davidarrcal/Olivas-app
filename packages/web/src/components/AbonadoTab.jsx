@@ -76,7 +76,7 @@ export default function AbonadoTab({ bancalId, fincaId }) {
     const ok = await confirm('Eliminar abonado', '¿Desea eliminar este abonado?');
     if (!ok) return;
     try {
-      await api.del('/abonados/' + id);
+      await api.del('/fincas/' + fincaId + '/bancales/' + bancalId + '/abonados/' + id);
       showToast('Abonado eliminado correctamente');
       cargar();
     } catch (err) {

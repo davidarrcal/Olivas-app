@@ -63,7 +63,7 @@ export default function TratamientoTab({ bancalId, fincaId }) {
     const ok = await confirm('Eliminar tratamiento', '¿Desea eliminar este tratamiento?');
     if (!ok) return;
     try {
-      await api.del('/tratamientos/' + id);
+      await api.del('/fincas/' + fincaId + '/bancales/' + bancalId + '/tratamientos/' + id);
       showToast('Tratamiento eliminado correctamente');
       cargar();
     } catch (err) {

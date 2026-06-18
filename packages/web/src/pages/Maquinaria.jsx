@@ -50,7 +50,7 @@ export default function Maquinaria() {
     const ok = await confirm('Eliminar maquinaria', '¿Desea eliminar esta maquinaria?');
     if (!ok) return;
     try {
-      await api.del('/maquinaria/' + id);
+      await api.del('/fincas/' + fincaId + '/maquinaria/' + id);
       showToast('Maquinaria eliminada correctamente');
       cargar();
     } catch (err) {
@@ -79,7 +79,7 @@ export default function Maquinaria() {
     const ok = await confirm('Eliminar mantenimiento', '¿Desea eliminar este mantenimiento?');
     if (!ok) return;
     try {
-      await api.del('/maquinaria/' + maqId + '/mantenimientos/' + mantId);
+      await api.del('/fincas/' + fincaId + '/maquinaria/' + maqId + '/mantenimientos/' + mantId);
       showToast('Mantenimiento eliminado correctamente');
       cargar();
     } catch (err) {

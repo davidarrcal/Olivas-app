@@ -44,7 +44,7 @@ export default function Inventario() {
     };
     try {
       if (editId) {
-        await api.put('/inventario/' + editId, body);
+        await api.put('/fincas/' + fincaId + '/inventario/' + editId, body);
         showToast('Inventario actualizado correctamente');
       } else {
         await api.post('/fincas/' + fincaId + '/inventario', body);
@@ -60,7 +60,7 @@ export default function Inventario() {
     const ok = await confirm('Eliminar registro', '¿Desea eliminar este registro del inventario?');
     if (!ok) return;
     try {
-      await api.del('/inventario/' + id);
+      await api.del('/fincas/' + fincaId + '/inventario/' + id);
       showToast('Registro de inventario eliminado correctamente');
       cargar();
     } catch (err) {

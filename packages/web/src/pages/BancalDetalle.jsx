@@ -91,7 +91,7 @@ export default function BancalDetalle() {
 
   async function guardarVariedad() {
     try {
-      await api.put('/fincas/' + bancal.finca_id + '/bancales/variedades/' + editVarId, {
+      await api.put('/fincas/' + bancal.finca_id + '/bancales/' + id + '/variedades/' + editVarId, {
         variedad: editVarForm.variedad,
         num_arboles: Number(editVarForm.num_arboles),
         ano_plantacion: editVarForm.ano_plantacion ? Number(editVarForm.ano_plantacion) : null,
@@ -110,7 +110,7 @@ export default function BancalDetalle() {
     const ok = await confirm('Eliminar variedad', 'Desea eliminar esta variedad?');
     if (!ok) return;
     try {
-      await api.del('/fincas/' + bancal.finca_id + '/bancales/variedades/' + varId);
+      await api.del('/fincas/' + bancal.finca_id + '/bancales/' + id + '/variedades/' + varId);
       showToast('Variedad eliminada correctamente');
       cargar();
     } catch (err) {

@@ -48,7 +48,7 @@ export default function PodaTab({ bancalId, fincaId }) {
     const ok = await confirm('Eliminar poda', '¿Desea eliminar esta poda?');
     if (!ok) return;
     try {
-      await api.del('/podas/' + id);
+      await api.del('/fincas/' + fincaId + '/bancales/' + bancalId + '/podas/' + id);
       showToast('Poda eliminada correctamente');
       cargar();
     } catch (err) {

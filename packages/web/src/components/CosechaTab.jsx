@@ -50,7 +50,7 @@ export default function CosechaTab({ bancalId, fincaId }) {
     const ok = await confirm('Eliminar cosecha', '¿Desea eliminar esta cosecha?');
     if (!ok) return;
     try {
-      await api.del('/cosechas/' + id);
+      await api.del('/fincas/' + fincaId + '/bancales/' + bancalId + '/cosechas/' + id);
       showToast('Cosecha eliminada correctamente');
       cargar();
     } catch (err) {

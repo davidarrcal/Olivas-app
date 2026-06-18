@@ -47,7 +47,7 @@ export default function RiegoTab({ bancalId, fincaId }) {
     const ok = await confirm('Eliminar riego', '¿Desea eliminar este riego?');
     if (!ok) return;
     try {
-      await api.del('/riegos/' + id);
+      await api.del('/fincas/' + fincaId + '/bancales/' + bancalId + '/riegos/' + id);
       showToast('Riego eliminado correctamente');
       cargar();
     } catch (err) {
