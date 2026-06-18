@@ -37,7 +37,11 @@ router.post('/importar-aemet', async (req, res) => {
     if (!datos) return res.status(502).json({ error: 'No se pudieron obtener datos de AEMET. Intentalo en unos minutos (rate limit).', details: 'AEMET returned no data' });
     const prisma = require('../prisma');
     const fincaId = Number(req.params.fincaId);
-    const fecha = new Date(datos.fecha);
+    const fechaStr = datos.fecha;
+    const fecha = fechaStr instanceof Date ? fechaStr : new Date(fechaStr);
+    if (isNaN(fecha.getTime())) {
+      return res.status(502).json({ error: 'Fecha AEMET invalida', details: 'Got: ' + fechaStr });
+    }
     const existente = await prisma.meteoDatos.findFirst({
       where: { finca_id: fincaId, fecha, fuente: 'aemet' }
     });
@@ -67,6 +71,7 @@ router.post('/importar-aemet', async (req, res) => {
     }
     res.json(registro);
   } catch (err) {
+    console.error('Error importar AEMET:', err);
     res.status(500).json({ error: 'Error al importar datos de AEMET', details: err.message });
   }
 });
