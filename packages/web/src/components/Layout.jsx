@@ -25,10 +25,7 @@ export default function Layout() {
           <Sidebar />
         </div>
         {user && (
-          <div style={{
-            padding: '1rem', borderTop: '1px solid #3a5a34', marginTop: 'auto',
-            display: 'flex', alignItems: 'center', gap: '0.5rem'
-          }}>
+          <div className="sidebar-user">
             <div style={{
               width: '32px', height: '32px', borderRadius: '50%', background: '#4a7c3f',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
