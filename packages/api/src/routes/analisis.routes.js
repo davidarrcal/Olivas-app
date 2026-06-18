@@ -5,7 +5,7 @@ const Joi = require('joi');
 
 const analisisSchema = Joi.object({
   tipo: Joi.string().valid('suelo', 'foliar', 'agua').required(),
-  fecha: Joi.string().isoDate().required(),
+  fecha: Joi.alternatives().try(Joi.string().isoDate(), Joi.date().iso()).required(),
   ph: Joi.number().allow(null),
   materia_organica: Joi.number().allow(null),
   nitrogeno: Joi.number().allow(null),

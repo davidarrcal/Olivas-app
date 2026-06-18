@@ -4,8 +4,8 @@ const validate = require('../middleware/validate');
 const Joi = require('joi');
 
 const riegoSchema = Joi.object({
-  fecha_inicio: Joi.string().isoDate().required(),
-  fecha_fin: Joi.string().isoDate().allow(null, ''),
+  fecha_inicio: Joi.alternatives().try(Joi.string().isoDate(), Joi.date().iso()).required(),
+  fecha_fin: Joi.alternatives().try(Joi.string().isoDate(), Joi.date().iso()).allow(null, ''),
   volumen_m3: Joi.number().positive().allow(null),
   precipitacion_mm: Joi.number().allow(null),
   etp: Joi.number().allow(null),

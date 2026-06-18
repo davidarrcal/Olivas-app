@@ -5,7 +5,7 @@ const Joi = require('joi');
 
 const tratamientoSchema = Joi.object({
   producto_id: Joi.number().integer().allow(null),
-  fecha: Joi.string().isoDate().required(),
+  fecha: Joi.alternatives().try(Joi.string().isoDate(), Joi.date().iso()).required(),
   dosis: Joi.string().max(100).allow(null, ''),
   periodo_seguridad_dias: Joi.number().integer().allow(null),
   plaga_enfermedad: Joi.string().max(200).allow(null, ''),

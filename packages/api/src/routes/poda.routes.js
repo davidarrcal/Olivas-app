@@ -4,7 +4,7 @@ const validate = require('../middleware/validate');
 const Joi = require('joi');
 
 const podaSchema = Joi.object({
-  fecha: Joi.string().isoDate().required(),
+  fecha: Joi.alternatives().try(Joi.string().isoDate(), Joi.date().iso()).required(),
   tipo: Joi.string().valid('formacion', 'fructificacion', 'renovacion', 'sanitaria').required(),
   volumen_lena_kg: Joi.number().positive().allow(null),
   observaciones: Joi.string().allow(null, '')

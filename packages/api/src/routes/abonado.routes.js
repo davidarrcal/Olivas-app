@@ -5,7 +5,7 @@ const Joi = require('joi');
 
 const abonadoSchema = Joi.object({
   producto_id: Joi.number().integer().allow(null),
-  fecha: Joi.string().isoDate().required(),
+  fecha: Joi.alternatives().try(Joi.string().isoDate(), Joi.date().iso()).required(),
   tipo: Joi.string().valid('suelo', 'foliar', 'fertirriego', 'organico').required(),
   npk: Joi.string().max(50).allow(null, ''),
   dosis: Joi.number().positive().allow(null),

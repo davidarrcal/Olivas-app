@@ -12,7 +12,7 @@ const maquinariaSchema = Joi.object({
 });
 
 const mantenimientoSchema = Joi.object({
-  fecha: Joi.string().isoDate().required(),
+  fecha: Joi.alternatives().try(Joi.string().isoDate(), Joi.date().iso()).required(),
   tipo: Joi.string().max(100).required(),
   descripcion: Joi.string().allow(null, ''),
   proximo_aviso_horas: Joi.number().allow(null),

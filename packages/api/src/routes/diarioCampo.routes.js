@@ -4,7 +4,7 @@ const validate = require('../middleware/validate');
 const Joi = require('joi');
 
 const diarioSchema = Joi.object({
-  fecha: Joi.string().isoDate().required(),
+  fecha: Joi.alternatives().try(Joi.string().isoDate(), Joi.date().iso()).required(),
   horas: Joi.number().positive().allow(null),
   tipo_labor: Joi.string().max(100).allow(null, ''),
   descripcion: Joi.string().allow(null, ''),

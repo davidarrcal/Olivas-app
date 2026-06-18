@@ -5,7 +5,7 @@ const Joi = require('joi');
 
 const ingresoSchema = Joi.object({
   finca_id: Joi.number().integer().required(),
-  fecha: Joi.string().isoDate().required(),
+  fecha: Joi.alternatives().try(Joi.string().isoDate(), Joi.date().iso()).required(),
   concepto: Joi.string().max(255).required(),
   categoria: Joi.string().valid('venta_aceituna','venta_aceite','subvencion','otros').required(),
   importe: Joi.number().positive().required(),

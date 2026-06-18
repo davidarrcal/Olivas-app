@@ -9,7 +9,7 @@ const inventarioSchema = Joi.object({
   stock_actual: Joi.number().required(),
   stock_minimo: Joi.number().allow(null),
   precio_compra: Joi.number().positive().allow(null),
-  fecha_ultima_compra: Joi.string().isoDate().allow(null, '')
+  fecha_ultima_compra: Joi.alternatives().try(Joi.string().isoDate(), Joi.date().iso()).allow(null, '')
 });
 
 const router = Router({ mergeParams: true });

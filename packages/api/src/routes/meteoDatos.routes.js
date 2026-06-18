@@ -5,7 +5,7 @@ const validate = require('../middleware/validate');
 const Joi = require('joi');
 
 const meteoSchema = Joi.object({
-  fecha: Joi.string().isoDate().required(),
+  fecha: Joi.alternatives().try(Joi.string().isoDate(), Joi.date().iso()).required(),
   temp_max: Joi.number().allow(null),
   temp_min: Joi.number().allow(null),
   lluvia_mm: Joi.number().allow(null),

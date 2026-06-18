@@ -6,7 +6,7 @@ const Joi = require('joi');
 const gastoSchema = Joi.object({
   finca_id: Joi.number().integer().required(),
   bancal_id: Joi.number().integer().allow(null),
-  fecha: Joi.string().isoDate().required(),
+  fecha: Joi.alternatives().try(Joi.string().isoDate(), Joi.date().iso()).required(),
   concepto: Joi.string().max(255).required(),
   categoria: Joi.string().valid('abono','fitosanitario','riego','combustible','mantenimiento','almazara','transporte','seguro','otros').required(),
   importe: Joi.number().positive().required(),
