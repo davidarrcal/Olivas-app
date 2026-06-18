@@ -11,11 +11,16 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem('olivas_token');
     const savedUser = localStorage.getItem('olivas_user');
     if (token && savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch { localStorage.removeItem('olivas_token'); localStorage.removeItem('olivas_user'); }
+      api.get('/auth/me').then(userData => {
+        setUser(userData);
+        localStorage.setItem('olivas_user', JSON.stringify(userData));
+      }).catch(() => {
+        localStorage.removeItem('olivas_token');
+        localStorage.removeItem('olivas_user');
+      }).finally(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   async function login(email, password) {
