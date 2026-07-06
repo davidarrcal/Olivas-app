@@ -330,3 +330,62 @@ model Config {
 
   @@map("config")
 }
+
+model ConversacionIA {
+  id              Int      @id @default(autoincrement())
+  usuario_id      Int      @map("usuario_id")
+  contexto_pantalla String? @db.VarChar(100) @map("contexto_pantalla")
+  entidad_id      Int?     @map("entidad_id")
+  resumen         String?  @db.Text
+  fecha_creacion  DateTime @default(now()) @map("fecha_creacion")
+  fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
+
+  mensajes MensajeIA[]
+
+  @@map("conversacion_ia")
+}
+
+model MensajeIA {
+  id              Int      @id @default(autoincrement())
+  conversacion_id Int      @map("conversacion_id")
+  rol             String   @db.VarChar(20)
+  contenido       String   @db.Text
+  tool_calls      Json?
+  tool_result     Json?
+  tokens_entrada  Int?     @map("tokens_entrada")
+  tokens_salida   Int?     @map("tokens_salida")
+  fecha_creacion  DateTime @default(now()) @map("fecha_creacion")
+
+  conversacion ConversacionIA @relation(fields: [conversacion_id], references: [id], onDelete: Cascade)
+
+  @@map("mensaje_ia")
+}
+
+model AlertaIA {
+  id              Int      @id @default(autoincrement())
+  usuario_id      Int      @map("usuario_id")
+  finca_id        Int?     @map("finca_id")
+  tipo            String   @db.VarChar(50)
+  severidad       String   @db.VarChar(20)
+  titulo          String   @db.VarChar(255)
+  mensaje         String   @db.Text
+  datos           Json?
+  leida           Boolean  @default(false)
+  fecha_creacion  DateTime @default(now()) @map("fecha_creacion")
+
+  @@map("alerta_ia")
+}
+
+model AuditoriaIA {
+  id              Int      @id @default(autoincrement())
+  usuario_id      Int      @map("usuario_id")
+  accion          String   @db.VarChar(100)
+  herramienta     String?  @db.VarChar(100)
+  parametros      Json?
+  resultado       String?  @db.Text
+  exito           Boolean
+  error           String?  @db.Text
+  fecha           DateTime @default(now())
+
+  @@map("auditoria_ia")
+}

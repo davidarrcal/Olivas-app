@@ -16,6 +16,7 @@ import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ConfirmProvider } from './context/ConfirmContext';
 import { ToastProvider } from './context/ToastContext';
+import AsistenteIA from './components/AsistenteIA';
 import './styles.css';
 
 function ProtectedRoute({ children }) {
@@ -66,13 +67,23 @@ function AppRoutes() {
   );
 }
 
+function AppShell() {
+  const { user } = useAuth();
+  return (
+    <>
+      <AppRoutes />
+      {user && <AsistenteIA />}
+    </>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <ConfirmProvider>
         <ToastProvider>
           <BrowserRouter>
-            <AppRoutes />
+            <AppShell />
           </BrowserRouter>
         </ToastProvider>
       </ConfirmProvider>

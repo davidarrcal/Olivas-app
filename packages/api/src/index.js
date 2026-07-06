@@ -21,6 +21,7 @@ const ingresoRoutes = require('./routes/ingreso.routes');
 const diarioRoutes = require('./routes/diarioCampo.routes');
 const maquinariaRoutes = require('./routes/maquinaria.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const iaRoutes = require('./routes/ia.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -52,6 +53,7 @@ app.use('/api/fincas/:fincaId/maquinaria', maquinariaRoutes);
 app.use('/api/fincas/:fincaId/inventario', inventarioRoutes);
 app.use('/api/fincas/:fincaId/dashboard', dashboardRoutes);
 app.use('/api/productos', productoRoutes);
+app.use('/api/ia', iaRoutes);
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
