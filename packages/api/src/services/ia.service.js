@@ -1,5 +1,5 @@
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'moonshotai/kimi-k2.6:free';
+const MODEL = 'nvidia/nemotron-3-super-120b-a12b:free';
 
 const iaContextService = require('./ia-context.service');
 const iaToolsService = require('./ia-tools.service');

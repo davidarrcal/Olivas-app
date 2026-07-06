@@ -1,7 +1,7 @@
 const prisma = require('../prisma');
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'moonshotai/kimi-k2.6:free';
+const MODEL = 'nvidia/nemotron-3-super-120b-a12b:free';
 
 async function getHistorial(conversacionId, userId) {
   if (!conversacionId) return [];
@@ -73,7 +73,9 @@ async function saveMensaje(conversacionId, userId, mensaje) {
       conversacion_id: convId,
       rol: mensaje.rol,
       contenido: mensaje.contenido,
-      tool_calls: mensaje.tool_calls || null
+      tool_calls: mensaje.tool_calls || null,
+      tokens_entrada: mensaje.tokens_entrada || null,
+      tokens_salida: mensaje.tokens_salida || null
     }
   });
   return convId;

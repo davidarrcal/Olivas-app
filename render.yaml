@@ -14,3 +14,11 @@ services:
         value: 10000
       - key: FRONTEND_URL
         sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: AEMET_API_KEY
+        sync: false
+      - key: AEMET_MUNICIPIO
+        value: "18098"

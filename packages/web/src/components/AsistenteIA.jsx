@@ -212,7 +212,7 @@ export default function AsistenteIA() {
                   </div>
                 )}
                 <div className="ia-msg-content">
-                  {m.content || (streaming && i === messages.length - 1 ? '<span className="ia-typing">...</span>' : '')}
+                  {m.content || (streaming && i === messages.length - 1 ? '...' : '')}
                 </div>
               </div>
             ))}
