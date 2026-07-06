@@ -2,37 +2,26 @@ import { useState, useEffect } from 'react';
 import api from '../api';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../hooks/useToast';
-
-const CATEGORIAS_GASTO = [
-  { valor: 'abono', etiqueta: 'Abono' },
-  { valor: 'fitosanitario', etiqueta: 'Fitosanitario' },
-  { valor: 'riego', etiqueta: 'Riego' },
-  { valor: 'combustible', etiqueta: 'Combustible' },
-  { valor: 'mantenimiento', etiqueta: 'Mantenimiento' },
-  { valor: 'almazara', etiqueta: 'Almazara' },
-  { valor: 'transporte', etiqueta: 'Transporte' },
-  { valor: 'seguro', etiqueta: 'Seguro' },
-  { valor: 'otros', etiqueta: 'Otros' }
-];
-
-const CATEGORIAS_INGRESO = [
-  { valor: 'venta_aceituna', etiqueta: 'Venta aceituna' },
-  { valor: 'venta_aceite', etiqueta: 'Venta aceite' },
-  { valor: 'subvencion', etiqueta: 'Subvencion' },
-  { valor: 'otros', etiqueta: 'Otros' }
-];
+import { getCultivo } from '../cultivos';
 
 const fechaHoy = () => new Date().toISOString().split('T')[0];
 const formGastoVacio = { fecha: fechaHoy(), concepto: '', categoria: 'abono', importe: '', bancal_id: '', observaciones: '' };
-const formIngresoVacio = { fecha: fechaHoy(), concepto: '', categoria: 'venta_aceituna', importe: '', kg_vendidos: '', precio_kg: '', observaciones: '' };
+const formIngresoVacio = { fecha: fechaHoy(), concepto: '', categoria: 'venta_producto', importe: '', kg_vendidos: '', precio_kg: '', observaciones: '' };
 
 export default function Economia() {
   const [fincaId, setFincaId] = useState(null);
+  const [tipoCultivo, setTipoCultivo] = useState('olivo');
   useEffect(() => {
     api.get('/fincas').then(fincas => {
-      if (fincas.length > 0) setFincaId(fincas[0].id);
+      if (fincas.length > 0) {
+        setFincaId(fincas[0].id);
+        setTipoCultivo(fincas[0].tipo_cultivo || 'olivo');
+      }
     });
   }, []);
+  const cultivo = getCultivo(tipoCultivo);
+  const CATEGORIAS_GASTO = cultivo.categoriasGasto;
+  const CATEGORIAS_INGRESO = cultivo.categoriasIngreso;
   const [tab, setTab] = useState('gastos');
   const [gastos, setGastos] = useState([]);
   const [ingresos, setIngresos] = useState([]);

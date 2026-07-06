@@ -5,6 +5,7 @@ const Joi = require('joi');
 
 const fincaSchema = Joi.object({
   nombre: Joi.string().min(2).max(150).required(),
+  tipo_cultivo: Joi.string().max(50).allow('', null),
   ubicacion: Joi.string().max(255).allow('', null),
   altitud: Joi.number().integer().allow(null),
   latitud: Joi.number().allow(null),

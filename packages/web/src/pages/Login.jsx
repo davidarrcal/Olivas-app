@@ -38,7 +38,7 @@ export default function Login() {
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🫒</div>
           <h1 style={{ color: '#2d5a27', margin: 0, fontSize: '1.8rem' }}>Olivas</h1>
-          <p style={{ color: '#6b7c6b', margin: '0.5rem 0 0' }}>Gestion de Olivar</p>
+          <p style={{ color: '#6b7c6b', margin: '0.5rem 0 0' }}>Gestion agricola</p>
         </div>
 
         {error && (

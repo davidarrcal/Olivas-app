@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../api';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../hooks/useToast';
+import { CULTIVO_LIST, getCultivo } from '../cultivos';
 
 const TEXTURAS = [
   { valor: 'arcilloso', etiqueta: 'Arcilloso' },
@@ -20,7 +21,8 @@ export default function FincaDetalle() {
   const [showModal, setShowModal] = useState(false);
   const [showEditFinca, setShowEditFinca] = useState(false);
   const [form, setForm] = useState(formBancalVacio);
-  const [formFinca, setFormFinca] = useState({ nombre: '', ubicacion: '', altitud: '', superficie_total: '' });
+  const [formFinca, setFormFinca] = useState({ nombre: '', tipo_cultivo: 'olivo', ubicacion: '', altitud: '', superficie_total: '' });
+  const [customCultivo, setCustomCultivo] = useState('');
   const { confirm } = useConfirm();
   const { showToast } = useToast();
 
@@ -33,9 +35,11 @@ export default function FincaDetalle() {
 
   async function editarFinca(e) {
     e.preventDefault();
+    const tipoCultivo = formFinca.tipo_cultivo === 'otro' && customCultivo ? customCultivo.toLowerCase().replace(/\s+/g, '_') : formFinca.tipo_cultivo;
     try {
       await api.put(`/fincas/${id}`, {
         nombre: formFinca.nombre,
+        tipo_cultivo: tipoCultivo,
         ubicacion: formFinca.ubicacion || null,
         altitud: formFinca.altitud ? Number(formFinca.altitud) : null,
         superficie_total: formFinca.superficie_total ? Number(formFinca.superficie_total) : null
@@ -83,15 +87,27 @@ export default function FincaDetalle() {
 
   if (!finca) return <div className="empty-state"><h3>Cargando...</h3></div>;
 
+  const cultivo = getCultivo(finca.tipo_cultivo);
+
+  function abrirEditarFinca() {
+    const cultivoKey = CULTIVO_LIST.some(c => c.key === finca.tipo_cultivo) ? finca.tipo_cultivo : 'otro';
+    setFormFinca({ nombre: finca.nombre, tipo_cultivo: cultivoKey, ubicacion: finca.ubicacion || '', altitud: finca.altitud || '', superficie_total: finca.superficie_total || '' });
+    setCustomCultivo(cultivoKey === 'otro' ? finca.tipo_cultivo : '');
+    setShowEditFinca(true);
+  }
+
   return (
     <div>
       <div className="page-header">
         <div>
-          <h2>{finca.nombre}</h2>
-          <p style={{ color: 'var(--gris-medio)' }}>{finca.ubicacion} | Altitud: {finca.altitud || '-'} m | {finca.superficie_total || '-'} ha</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '1.8rem' }}>{cultivo.icono}</span>
+            <h2 style={{ margin: 0 }}>{finca.nombre}</h2>
+          </div>
+          <p style={{ color: 'var(--gris-medio)', marginTop: '0.25rem' }}>{cultivo.labelLargo} | {finca.ubicacion} | Altitud: {finca.altitud || '-'} m | {finca.superficie_total || '-'} ha</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button className="btn btn-secondary btn-sm" onClick={() => { setFormFinca({ nombre: finca.nombre, ubicacion: finca.ubicacion || '', altitud: finca.altitud || '', superficie_total: finca.superficie_total || '' }); setShowEditFinca(true); }}>Editar finca</button>
+          <button className="btn btn-secondary btn-sm" onClick={abrirEditarFinca}>Editar finca</button>
           <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Nuevo Bancal</button>
         </div>
       </div>
@@ -174,6 +190,18 @@ export default function FincaDetalle() {
             <h3>Editar Finca</h3>
             <form onSubmit={editarFinca}>
               <div className="form-group"><label>Nombre *</label><input required value={formFinca.nombre} onChange={e => setFormFinca({...formFinca, nombre: e.target.value})} /></div>
+              <div className="form-group">
+                <label>Tipo de cultivo *</label>
+                <select required value={formFinca.tipo_cultivo} onChange={e => { setFormFinca({...formFinca, tipo_cultivo: e.target.value}); setCustomCultivo(''); }}>
+                  {CULTIVO_LIST.map(c => <option key={c.key} value={c.key}>{c.icono} {c.label}</option>)}
+                </select>
+              </div>
+              {formFinca.tipo_cultivo === 'otro' && (
+                <div className="form-group">
+                  <label>Especifica el cultivo *</label>
+                  <input required value={customCultivo} onChange={e => setCustomCultivo(e.target.value)} placeholder="Ej: Nogal, Aguacate, Chirimoyo..." />
+                </div>
+              )}
               <div className="form-group"><label>Ubicacion</label><input value={formFinca.ubicacion} onChange={e => setFormFinca({...formFinca, ubicacion: e.target.value})} placeholder="Ej: Jaen, Andalucia" /></div>
               <div className="form-row">
                 <div className="form-group"><label>Altitud (m)</label><input type="number" value={formFinca.altitud} onChange={e => setFormFinca({...formFinca, altitud: e.target.value})} /></div>

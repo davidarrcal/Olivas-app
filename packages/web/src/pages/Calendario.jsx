@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
+import { getCultivo } from '../cultivos';
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const TIPOS = {
@@ -10,26 +11,15 @@ const TIPOS = {
   cosecha: { color: '#c0392b', label: 'Cosecha' }
 };
 
-const RECOMENDACIONES = [
-  { mes: 0, label: 'Enero', tareas: ['Reposo invernal','Revision maquinaria','Planificacion anual'] },
-  { mes: 1, label: 'Febrero', tareas: ['Poda de formacion y fructificacion','Recoger lena','Prevencion heladas'] },
-  { mes: 2, label: 'Marzo', tareas: ['Abonado de fondo (NPK)','Preparar terreno','Inicio tratamientos cobre'] },
-  { mes: 3, label: 'Abril', tareas: ['Abonado nitrogenado','Control mosca del olivo','Tratamientos foliares boro'] },
-  { mes: 4, label: 'Mayo', tareas: ['Cuajado del fruto','Fertirriego','Control repilo'] },
-  { mes: 5, label: 'Junio', tareas: ['Riegos frecuentes','Tratamientos mosca','Abonado potasio'] },
-  { mes: 6, label: 'Julio', tareas: ['Riego intensivo','Vigilar plaga mosca','Control adventicias'] },
-  { mes: 7, label: 'Agosto', tareas: ['Riego','Vigilar mosca del olivo','Preparar cosecha'] },
-  { mes: 8, label: 'Septiembre', tareas: ['Pre-cosecha variedades tempranas','Riego','Tratamientos pre-cosecha'] },
-  { mes: 9, label: 'Octubre', tareas: ['Cosecha Arbequina y Hojiblanca','Abonado post-cosecha','Analisis suelo'] },
-  { mes: 10, label: 'Noviembre', tareas: ['Cosecha Picual','Abonado organico','Analisis foliar'] },
-  { mes: 11, label: 'Diciembre', tareas: ['Fin cosecha','Poda sanitaria','Planificacion proximo anio'] }
-];
-
 export default function Calendario() {
   const [fincaId, setFincaId] = useState(null);
+  const [tipoCultivo, setTipoCultivo] = useState('olivo');
   useEffect(() => {
     api.get('/fincas').then(fincas => {
-      if (fincas.length > 0) setFincaId(fincas[0].id);
+      if (fincas.length > 0) {
+        setFincaId(fincas[0].id);
+        setTipoCultivo(fincas[0].tipo_cultivo || 'olivo');
+      }
     });
   }, []);
   const [data, setData] = useState(null);
@@ -44,6 +34,9 @@ export default function Calendario() {
     } catch (err) { console.error(err); }
   }
 
+  const cultivo = getCultivo(tipoCultivo);
+  const RECOMENDACIONES = cultivo.calendario;
+
   const eventosMes = data ? data.eventos.filter(e => {
     const d = new Date(e.fecha);
     return d.getMonth() === mesSeleccionado;
@@ -56,7 +49,7 @@ export default function Calendario() {
   return (
     <div>
       <div className="page-header">
-        <h2>Calendario Agricola</h2>
+        <h2>Calendario Agricola - {cultivo.icono} {cultivo.labelLargo}</h2>
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
@@ -69,7 +62,7 @@ export default function Calendario() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
         <div>
-          <h3 style={{ marginBottom: '0.75rem' }}>Tareas recomendadas - {recomendacion?.label}</h3>
+          <h3 style={{ marginBottom: '0.75rem' }}>Tareas recomendadas - {recomendacion ? MESES[recomendacion.mes] : ''}</h3>
           <div className="card">
             <ul style={{ paddingLeft: '1.5rem' }}>
               {recomendacion?.tareas.map((t, i) => <li key={i} style={{ marginBottom: '0.5rem' }}>{t}</li>)}

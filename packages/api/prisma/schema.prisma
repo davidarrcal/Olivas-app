@@ -11,6 +11,7 @@ datasource db {
 model Finca {
   id               Int      @id @default(autoincrement())
   nombre           String   @unique @db.VarChar(150)
+  tipo_cultivo     String   @default("olivo") @db.VarChar(50) @map("tipo_cultivo")
   ubicacion        String?  @db.VarChar(255)
   altitud          Int?
   latitud          Float?

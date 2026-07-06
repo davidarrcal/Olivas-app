@@ -19,7 +19,7 @@ export default function Layout() {
       <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
           <h1>Olivas</h1>
-          <span>Gestion de Olivar</span>
+          <span>Gestion agricola</span>
         </div>
         <div onClick={closeMenu}>
           <Sidebar />

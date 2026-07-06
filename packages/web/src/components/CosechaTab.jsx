@@ -2,21 +2,17 @@ import { useState, useEffect } from 'react';
 import api from '../api';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../hooks/useToast';
-
-const METODOS = [
-  { valor: 'vareo', etiqueta: 'Vareo' },
-  { valor: 'vibrador', etiqueta: 'Vibrador' },
-  { valor: 'ordeno', etiqueta: 'Ordeno (manual)' },
-  { valor: 'desprendimiento_natural', etiqueta: 'Desprendimiento natural' }
-];
+import { getCultivo } from '../cultivos';
 
 const fechaHoy = () => new Date().toISOString().split('T')[0];
-const formVacio = { fecha: fechaHoy(), metodo_recoleccion: 'vibrador', kg_totales: '', rendimiento_graso_pct: '', almazara: '', observaciones: '' };
+const formVacio = { fecha: fechaHoy(), metodo_recoleccion: 'manual', kg_totales: '', rendimiento_graso_pct: '', almazara: '', observaciones: '' };
 
-export default function CosechaTab({ bancalId, fincaId }) {
+export default function CosechaTab({ bancalId, fincaId, tipoCultivo }) {
+  const cultivo = getCultivo(tipoCultivo || 'olivo');
+  const METODOS = cultivo.metodosRecoleccion;
   const [cosechas, setCosechas] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(formVacio);
+  const [form, setForm] = useState({ ...formVacio, metodo_recoleccion: METODOS[0]?.valor || 'manual' });
   const { confirm } = useConfirm();
   const { showToast } = useToast();
 

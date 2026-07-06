@@ -10,8 +10,8 @@ import PodaTab from '../components/PodaTab';
 import CosechaTab from '../components/CosechaTab';
 import AnalisisTab from '../components/AnalisisTab';
 import DiarioCampoTab from '../components/DiarioCampoTab';
+import { getCultivo } from '../cultivos';
 
-const VARIEDADES = ['Picual','Hojiblanca','Cornicabra','Manzanilla Cacere\u00f1a','Manzanilla Sevillana','Arbequina','Empeltre','Verdial de Badajoz','Lechin de Sevilla','Morisca','Gordal','Castellana'];
 const TEXTURAS = [
   { valor: 'arcilloso', etiqueta: 'Arcilloso' },
   { valor: 'franco_arcilloso', etiqueta: 'Franco-arcilloso' },
@@ -120,6 +120,8 @@ export default function BancalDetalle() {
 
   if (!bancal) return <div className="empty-state"><h3>Cargando...</h3></div>;
 
+  const cultivo = getCultivo(bancal.finca?.tipo_cultivo || 'olivo');
+
   const tabs = [
     { id: 'variedades', label: 'Variedades' },
     { id: 'riegos', label: 'Riegos' },
@@ -164,7 +166,7 @@ export default function BancalDetalle() {
               <tr key={v.id}>
                 {editVarId === v.id ? (
                   <>
-                    <td><select value={editVarForm.variedad} onChange={e => setEditVarForm({...editVarForm, variedad: e.target.value})}><option value="">-- Seleccionar --</option>{VARIEDADES.map(va => <option key={va} value={va}>{va}</option>)}</select></td>
+                    <td>{cultivo.variedades.length > 0 ? <select value={editVarForm.variedad} onChange={e => setEditVarForm({...editVarForm, variedad: e.target.value})}><option value="">-- Seleccionar --</option>{cultivo.variedades.map(va => <option key={va} value={va}>{va}</option>)}</select> : <input value={editVarForm.variedad} onChange={e => setEditVarForm({...editVarForm, variedad: e.target.value})} placeholder="Nombre de la variedad" />}</td>
                     <td><input type="number" value={editVarForm.num_arboles} onChange={e => setEditVarForm({...editVarForm, num_arboles: e.target.value})} style={{width:'70px'}} /></td>
                     <td><input type="number" value={editVarForm.ano_plantacion} onChange={e => setEditVarForm({...editVarForm, ano_plantacion: e.target.value})} style={{width:'80px'}} /></td>
                     <td><input type="number" value={editVarForm.produccion_estimada} onChange={e => setEditVarForm({...editVarForm, produccion_estimada: e.target.value})} style={{width:'80px'}} /></td>
@@ -191,7 +193,7 @@ export default function BancalDetalle() {
           {showVariedad && (
             <div className="modal-overlay" onClick={() => setShowVariedad(false)}><div className="modal" onClick={e => e.stopPropagation()}>
               <h3>Nueva Variedad</h3><form onSubmit={crearVariedad}>
-                <div className="form-group"><label>Variedad *</label><select required value={formVar.variedad} onChange={e => setFormVar({...formVar, variedad: e.target.value})}><option value="">-- Seleccionar --</option>{VARIEDADES.map(v => <option key={v} value={v}>{v}</option>)}</select></div>
+                <div className="form-group"><label>Variedad *</label>{cultivo.variedades.length > 0 ? <select required value={formVar.variedad} onChange={e => setFormVar({...formVar, variedad: e.target.value})}><option value="">-- Seleccionar --</option>{cultivo.variedades.map(v => <option key={v} value={v}>{v}</option>)}</select> : <input required value={formVar.variedad} onChange={e => setFormVar({...formVar, variedad: e.target.value})} placeholder="Nombre de la variedad" />}</div>
                 <div className="form-row"><div className="form-group"><label>N. Arboles *</label><input type="number" required value={formVar.num_arboles} onChange={e => setFormVar({...formVar, num_arboles: e.target.value})} /></div><div className="form-group"><label>Ano Plantacion</label><input type="number" value={formVar.ano_plantacion} onChange={e => setFormVar({...formVar, ano_plantacion: e.target.value})} /></div></div>
                 <div className="form-group"><label>Produccion estimada (kg)</label><input type="number" value={formVar.produccion_estimada} onChange={e => setFormVar({...formVar, produccion_estimada: e.target.value})} /></div>
                 <div className="modal-actions"><button type="button" className="btn btn-secondary" onClick={() => setShowVariedad(false)}>Cancelar</button><button type="submit" className="btn btn-primary">Crear</button></div>
@@ -201,10 +203,10 @@ export default function BancalDetalle() {
       )}
 
       {tab === 'riegos' && <RiegoTab bancalId={Number(id)} fincaId={bancal.finca_id} />}
-      {tab === 'abonados' && <AbonadoTab bancalId={Number(id)} fincaId={bancal.finca_id} />}
-      {tab === 'tratamientos' && <TratamientoTab bancalId={Number(id)} fincaId={bancal.finca_id} />}
+      {tab === 'abonados' && <AbonadoTab bancalId={Number(id)} fincaId={bancal.finca_id} tipoCultivo={bancal.finca?.tipo_cultivo} />}
+      {tab === 'tratamientos' && <TratamientoTab bancalId={Number(id)} fincaId={bancal.finca_id} tipoCultivo={bancal.finca?.tipo_cultivo} />}
       {tab === 'podas' && <PodaTab bancalId={Number(id)} fincaId={bancal.finca_id} />}
-      {tab === 'cosechas' && <CosechaTab bancalId={Number(id)} fincaId={bancal.finca_id} />}
+      {tab === 'cosechas' && <CosechaTab bancalId={Number(id)} fincaId={bancal.finca_id} tipoCultivo={bancal.finca?.tipo_cultivo} />}
       {tab === 'analisis' && <AnalisisTab bancalId={Number(id)} fincaId={bancal.finca_id} />}
       {tab === 'diario' && <DiarioCampoTab bancalId={Number(id)} fincaId={bancal.finca_id} />}
 

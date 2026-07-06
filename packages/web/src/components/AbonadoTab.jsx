@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../api';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../hooks/useToast';
+import { getCultivo } from '../cultivos';
 
 const TIPOS_ABONO = [
   { valor: 'suelo', etiqueta: 'Suelo (granulado)' },
@@ -10,27 +11,13 @@ const TIPOS_ABONO = [
   { valor: 'organico', etiqueta: 'Organico (compost/estiercol)' }
 ];
 
-const ESTADOS_FENOLOGICOS = [
-  { valor: 'reposo_invernal', etiqueta: 'Reposo invernal' },
-  { valor: 'yema_hinchada', etiqueta: 'Yema hinchada' },
-  { valor: 'apertura_yemas', etiqueta: 'Apertura de yemas' },
-  { valor: 'hojas_nacientes', etiqueta: 'Hojas nacientes' },
-  { valor: 'diferenciacion_floral', etiqueta: 'Diferenciacion floral' },
-  { valor: 'boton_floral', etiqueta: 'Boton floral' },
-  { valor: 'floracion', etiqueta: 'Floracion' },
-  { valor: 'cuajado', etiqueta: 'Cuajado' },
-  { valor: 'endurecimiento_hueso', etiqueta: 'Endurecimiento del hueso' },
-  { valor: 'engorde_fruto', etiqueta: 'Engorde del fruto' },
-  { valor: 'envero', etiqueta: 'Envero (cambio de color)' },
-  { valor: 'maduracion', etiqueta: 'Maduracion' },
-  { valor: 'recoleccion', etiqueta: 'Recoleccion' }
-];
-
 const fechaHoy = () => new Date().toISOString().split('T')[0];
 
 const formVacio = { fecha: fechaHoy(), tipo: 'suelo', producto_id: '', npk: '', dosis: '', dosis_unidad: 'kg/ha', estado_fenologico: '', observaciones: '' };
 
-export default function AbonadoTab({ bancalId, fincaId }) {
+export default function AbonadoTab({ bancalId, fincaId, tipoCultivo }) {
+  const cultivo = getCultivo(tipoCultivo || 'olivo');
+  const estadosFenologicos = cultivo.estadosFenologicos;
   const [abonados, setAbonados] = useState([]);
   const [productos, setProductos] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -107,7 +94,7 @@ export default function AbonadoTab({ bancalId, fincaId }) {
                   <td>{a.producto?.nombre || '-'}</td>
                   <td>{a.npk || '-'}</td>
                   <td>{a.dosis ? a.dosis + ' ' + (a.dosis_unidad || '') : '-'}</td>
-                  <td>{ESTADOS_FENOLOGICOS.find(e => e.valor === a.estado_fenologico)?.etiqueta || '-'}</td>
+                  <td>{estadosFenologicos.find(e => e.valor === a.estado_fenologico)?.etiqueta || a.estado_fenologico || '-'}</td>
                   <td><button className="btn btn-danger btn-sm" onClick={() => eliminar(a.id)}>X</button></td>
                 </tr>
               ))}
@@ -165,7 +152,7 @@ export default function AbonadoTab({ bancalId, fincaId }) {
                 <label>Estado fenologico</label>
                 <select value={form.estado_fenologico} onChange={e => setForm({...form, estado_fenologico: e.target.value})}>
                   <option value="">-- Seleccionar --</option>
-                  {ESTADOS_FENOLOGICOS.map(e => <option key={e.valor} value={e.valor}>{e.etiqueta}</option>)}
+                  {estadosFenologicos.map(e => <option key={e.valor} value={e.valor}>{e.etiqueta}</option>)}
                 </select>
               </div>
               <div className="form-group">

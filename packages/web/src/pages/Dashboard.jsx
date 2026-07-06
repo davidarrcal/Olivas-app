@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
+import { getCultivo } from '../cultivos';
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
@@ -48,12 +49,14 @@ export default function Dashboard() {
   if (!data) return <div className="empty-state"><h3>Cargando datos...</h3></div>;
 
   const s = data.stats;
+  const fincaActual = fincas.find(f => f.id === fincaId);
+  const cultivo = getCultivo(fincaActual?.tipo_cultivo || 'olivo');
   const TIPOSEvento = { riego: { color: '#2980b9', icon: 'R' }, abonado: { color: '#27ae60', icon: 'A' }, tratamiento: { color: '#e67e22', icon: 'S' }, poda: { color: '#8e44ad', icon: 'P' }, cosecha: { color: '#c0392b', icon: 'C' } };
 
   return (
     <div>
       <div className="page-header">
-        <h2>Dashboard</h2>
+        <h2>Dashboard {cultivo.icono}</h2>
         <select value={fincaId} onChange={e => setFincaId(Number(e.target.value))} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--gris-claro)' }}>
           {fincas.map(f => <option key={f.id} value={f.id}>{f.nombre}</option>)}
         </select>

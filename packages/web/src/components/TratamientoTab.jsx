@@ -2,24 +2,14 @@ import { useState, useEffect } from 'react';
 import api from '../api';
 import { useConfirm } from '../hooks/useConfirm';
 import { useToast } from '../hooks/useToast';
-
-const PLAGAS = [
-  'Mosca del olivo (Bactrocera oleae)',
-  'Repilo o Antracnosis (Spilocaea oleagina)',
-  'Verticilosis (Verticillium dahliae)',
-  'Tuberculosis del olivo (Pseudomonas savastanoi)',
-  'Polilla del olivo (Prays oleae)',
-  'Cochinilla de la tizne (Saissetia oleae)',
-  'Barrenillo del olivo (Phloeotribus scarabaeoides)',
-  'Ara\u00f1a amarilla (Eriophyes oleae)',
-  'Mosca blanca',
-  'Otras'
-];
+import { getCultivo } from '../cultivos';
 
 const fechaHoy = () => new Date().toISOString().split('T')[0];
 const formVacio = { fecha: fechaHoy(), producto_id: '', dosis: '', periodo_seguridad_dias: '', plaga_enfermedad: '', observaciones: '' };
 
-export default function TratamientoTab({ bancalId, fincaId }) {
+export default function TratamientoTab({ bancalId, fincaId, tipoCultivo }) {
+  const cultivo = getCultivo(tipoCultivo || 'olivo');
+  const PLAGAS = cultivo.plagas;
   const [tratamientos, setTratamientos] = useState([]);
   const [productos, setProductos] = useState([]);
   const [showForm, setShowForm] = useState(false);
