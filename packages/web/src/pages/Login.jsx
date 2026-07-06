@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, register } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,7 +16,7 @@ export default function Login() {
     setLoading(true);
     try {
       if (isRegister) {
-        await login(email, password);
+        await register(email, password, nombre);
       } else {
         await login(email, password);
       }
