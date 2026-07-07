@@ -25,7 +25,7 @@ function ProtectedRoute({ children }) {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: '100vh', gap: '1rem' }}>
-        <div style={{ fontSize: '2rem' }}>🫒</div>
+        <div style={{ fontSize: '2rem' }}>🌱</div>
         <div style={{ color: '#6b7c6b' }}>Cargando...</div>
         <div style={{ color: '#999', fontSize: '0.85rem' }}>Si es la primera vez, el servidor puede tardar 30 segundos en despertar</div>
       </div>
