@@ -6,6 +6,11 @@ const MODEL = 'nvidia/nemotron-3-super-120b-a12b:free';
 async function getHistorial(conversacionId, userId) {
   if (!conversacionId) return [];
 
+  const conv = await prisma.conversacionIA.findFirst({
+    where: { id: conversacionId, usuario_id: userId }
+  });
+  if (!conv) return [];
+
   const mensajes = await prisma.mensajeIA.findMany({
     where: { conversacion_id: conversacionId },
     orderBy: { fecha_creacion: 'asc' },

@@ -17,7 +17,7 @@ class VariedadBancalController {
 
   async obtenerPorId(req, res, next) {
     try {
-      const variedad = await variedadService.obtenerPorId(Number(req.params.id));
+      const variedad = await variedadService.obtenerPorId(Number(req.params.id), req.user.id);
       if (!variedad) return res.status(404).json({ error: 'Variedad no encontrada' });
       res.json(variedad);
     } catch (err) { next(err); }
@@ -25,14 +25,14 @@ class VariedadBancalController {
 
   async actualizar(req, res, next) {
     try {
-      const variedad = await variedadService.actualizar(Number(req.params.id), req.body);
+      const variedad = await variedadService.actualizar(Number(req.params.id), req.body, req.user.id);
       res.json(variedad);
     } catch (err) { next(err); }
   }
 
   async eliminar(req, res, next) {
     try {
-      await variedadService.eliminar(Number(req.params.id));
+      await variedadService.eliminar(Number(req.params.id), req.user.id);
       res.status(204).send();
     } catch (err) { next(err); }
   }

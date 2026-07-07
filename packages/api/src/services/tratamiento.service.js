@@ -7,13 +7,17 @@ class TratamientoService {
   async obtenerTodos(bancalId) {
     return prisma.tratamiento.findMany({ where: { bancal_id: bancalId }, include: { producto: true }, orderBy: { fecha: 'desc' } });
   }
-  async obtenerPorId(id) {
-    return prisma.tratamiento.findUnique({ where: { id }, include: { producto: true } });
+  async obtenerPorId(id, userId) {
+    return prisma.tratamiento.findFirst({ where: { id, bancal: { finca: { usuario_id: userId } } }, include: { producto: true } });
   }
-  async actualizar(id, data) {
+  async actualizar(id, data, userId) {
+    const existe = await prisma.tratamiento.findFirst({ where: { id, bancal: { finca: { usuario_id: userId } } } });
+    if (!existe) throw new Error('No encontrado');
     return prisma.tratamiento.update({ where: { id }, data, include: { producto: true } });
   }
-  async eliminar(id) {
+  async eliminar(id, userId) {
+    const existe = await prisma.tratamiento.findFirst({ where: { id, bancal: { finca: { usuario_id: userId } } } });
+    if (!existe) throw new Error('No encontrado');
     return prisma.tratamiento.delete({ where: { id } });
   }
 }

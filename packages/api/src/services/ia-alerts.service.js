@@ -2,7 +2,7 @@ const prisma = require('../prisma');
 const aemetService = require('./aemet.service');
 
 async function generarAlertasProactivas(userId) {
-  const fincas = await prisma.finca.findMany();
+  const fincas = await prisma.finca.findMany({ where: { usuario_id: userId } });
   const alertasGeneradas = [];
 
   for (const finca of fincas) {

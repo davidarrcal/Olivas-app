@@ -5,9 +5,9 @@ class MaquinariaService {
   async obtenerTodos(fincaId) {
     return prisma.maquinaria.findMany({ where: { finca_id: fincaId }, include: { mantenimientos: { orderBy: { fecha: 'desc' } } }, orderBy: { nombre: 'asc' } });
   }
-  async obtenerPorId(id) { return prisma.maquinaria.findUnique({ where: { id }, include: { mantenimientos: { orderBy: { fecha: 'desc' } } } }); }
-  async actualizar(id, data) { return prisma.maquinaria.update({ where: { id }, data }); }
-  async eliminar(id) { return prisma.maquinaria.delete({ where: { id } }); }
+  async obtenerPorId(id, userId) { return prisma.maquinaria.findFirst({ where: { id, finca: { usuario_id: userId } }, include: { mantenimientos: { orderBy: { fecha: 'desc' } } } }); }
+  async actualizar(id, data, userId) { const existe = await prisma.maquinaria.findFirst({ where: { id, finca: { usuario_id: userId } } }); if (!existe) throw new Error('No encontrada'); return prisma.maquinaria.update({ where: { id }, data }); }
+  async eliminar(id, userId) { const existe = await prisma.maquinaria.findFirst({ where: { id, finca: { usuario_id: userId } } }); if (!existe) throw new Error('No encontrada'); return prisma.maquinaria.delete({ where: { id } }); }
 }
 
 module.exports = new MaquinariaService();

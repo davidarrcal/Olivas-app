@@ -7,9 +7,9 @@ class GastoService {
     if (categoria) where.categoria = categoria;
     return prisma.gasto.findMany({ where, include: { bancal: { select: { id: true, nombre: true } } }, orderBy: { fecha: 'desc' } });
   }
-  async obtenerPorId(id) { return prisma.gasto.findUnique({ where: { id } }); }
-  async actualizar(id, data) { return prisma.gasto.update({ where: { id }, data }); }
-  async eliminar(id) { return prisma.gasto.delete({ where: { id } }); }
+  async obtenerPorId(id, userId) { return prisma.gasto.findFirst({ where: { id, finca: { usuario_id: userId } } }); }
+  async actualizar(id, data, userId) { const existe = await prisma.gasto.findFirst({ where: { id, finca: { usuario_id: userId } } }); if (!existe) throw new Error('No encontrado'); return prisma.gasto.update({ where: { id }, data }); }
+  async eliminar(id, userId) { const existe = await prisma.gasto.findFirst({ where: { id, finca: { usuario_id: userId } } }); if (!existe) throw new Error('No encontrado'); return prisma.gasto.delete({ where: { id } }); }
   async resumen(fincaId) {
     const gastos = await prisma.gasto.findMany({ where: { finca_id: fincaId } });
     const porCategoria = {};

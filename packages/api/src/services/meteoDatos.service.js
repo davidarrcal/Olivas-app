@@ -13,13 +13,17 @@ class MeteoDatosService {
     }
     return prisma.meteoDatos.findMany({ where, orderBy: { fecha: 'desc' } });
   }
-  async obtenerPorId(id) {
-    return prisma.meteoDatos.findUnique({ where: { id } });
+  async obtenerPorId(id, userId) {
+    return prisma.meteoDatos.findFirst({ where: { id, finca: { usuario_id: userId } } });
   }
-  async actualizar(id, data) {
+  async actualizar(id, data, userId) {
+    const existe = await prisma.meteoDatos.findFirst({ where: { id, finca: { usuario_id: userId } } });
+    if (!existe) throw new Error('No encontrado');
     return prisma.meteoDatos.update({ where: { id }, data });
   }
-  async eliminar(id) {
+  async eliminar(id, userId) {
+    const existe = await prisma.meteoDatos.findFirst({ where: { id, finca: { usuario_id: userId } } });
+    if (!existe) throw new Error('No encontrado');
     return prisma.meteoDatos.delete({ where: { id } });
   }
   async resumen(fincaId) {

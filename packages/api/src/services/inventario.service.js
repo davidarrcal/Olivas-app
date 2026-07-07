@@ -7,13 +7,17 @@ class InventarioService {
   async obtenerTodos(fincaId) {
     return prisma.inventario.findMany({ where: { finca_id: fincaId }, include: { producto: true }, orderBy: { id: 'asc' } });
   }
-  async obtenerPorId(id) {
-    return prisma.inventario.findUnique({ where: { id }, include: { producto: true } });
+  async obtenerPorId(id, userId) {
+    return prisma.inventario.findFirst({ where: { id, finca: { usuario_id: userId } }, include: { producto: true } });
   }
-  async actualizar(id, data) {
+  async actualizar(id, data, userId) {
+    const existe = await prisma.inventario.findFirst({ where: { id, finca: { usuario_id: userId } } });
+    if (!existe) throw new Error('No encontrado');
     return prisma.inventario.update({ where: { id }, data, include: { producto: true } });
   }
-  async eliminar(id) {
+  async eliminar(id, userId) {
+    const existe = await prisma.inventario.findFirst({ where: { id, finca: { usuario_id: userId } } });
+    if (!existe) throw new Error('No encontrado');
     return prisma.inventario.delete({ where: { id } });
   }
   async alertas(fincaId) {

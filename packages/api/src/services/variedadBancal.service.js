@@ -14,15 +14,19 @@ class VariedadBancalService {
     });
   }
 
-  async obtenerPorId(id) {
-    return prisma.variedadBancal.findUnique({ where: { id } });
+  async obtenerPorId(id, userId) {
+    return prisma.variedadBancal.findFirst({ where: { id, bancal: { finca: { usuario_id: userId } } } });
   }
 
-  async actualizar(id, data) {
+  async actualizar(id, data, userId) {
+    const existe = await prisma.variedadBancal.findFirst({ where: { id, bancal: { finca: { usuario_id: userId } } } });
+    if (!existe) throw new Error('No encontrado');
     return prisma.variedadBancal.update({ where: { id }, data });
   }
 
-  async eliminar(id) {
+  async eliminar(id, userId) {
+    const existe = await prisma.variedadBancal.findFirst({ where: { id, bancal: { finca: { usuario_id: userId } } } });
+    if (!existe) throw new Error('No encontrado');
     return prisma.variedadBancal.delete({ where: { id } });
   }
 }

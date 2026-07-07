@@ -10,16 +10,18 @@ datasource db {
 
 model Finca {
   id               Int      @id @default(autoincrement())
-  nombre           String   @unique @db.VarChar(150)
+  nombre           String   @db.VarChar(150)
   tipo_cultivo     String   @default("olivo") @db.VarChar(50) @map("tipo_cultivo")
   ubicacion        String?  @db.VarChar(255)
   altitud          Int?
   latitud          Float?
   longitud         Float?
   superficie_total Float?   @db.DoublePrecision
+  usuario_id       Int      @map("usuario_id")
   fecha_creacion   DateTime @default(now()) @map("fecha_creacion")
   fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
 
+  usuario     Usuario     @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
   bancales    Bancal[]
   meteo_datos MeteoDatos[]
   maquinarias Maquinaria[]
@@ -27,6 +29,7 @@ model Finca {
   ingresos    Ingreso[]
   inventarios Inventario[]
 
+  @@unique([nombre, usuario_id])
   @@map("finca")
 }
 
@@ -320,6 +323,11 @@ model Usuario {
   fecha_creacion  DateTime @default(now()) @map("fecha_creacion")
   fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
 
+  fincas        Finca[]
+  conversaciones ConversacionIA[]
+  alertas       AlertaIA[]
+  auditorias    AuditoriaIA[]
+
   @@map("usuario")
 }
 
@@ -340,6 +348,7 @@ model ConversacionIA {
   fecha_creacion  DateTime @default(now()) @map("fecha_creacion")
   fecha_actualizacion DateTime @updatedAt @map("fecha_actualizacion")
 
+  usuario  Usuario     @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
   mensajes MensajeIA[]
 
   @@map("conversacion_ia")
@@ -373,6 +382,8 @@ model AlertaIA {
   leida           Boolean  @default(false)
   fecha_creacion  DateTime @default(now()) @map("fecha_creacion")
 
+  usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+
   @@map("alerta_ia")
 }
 
@@ -386,6 +397,8 @@ model AuditoriaIA {
   exito           Boolean
   error           String?  @db.Text
   fecha           DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
 
   @@map("auditoria_ia")
 }

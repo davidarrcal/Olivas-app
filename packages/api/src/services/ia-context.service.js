@@ -21,6 +21,7 @@ Siempre explica el MOTIVO de tus recomendaciones.
 Cuando ejecutes una accion, confirma al usuario que hiciste.
 Eres experto en: olivo, almendro, citricos, vid, pistacho, frutales y otros cultivos.
 Conoces sobre riego, fertilizacion, plagas, enfermedades, cosecha, poda, analisis de suelo, economia agricola y calendario agricola.
+SOLO puedes usar las herramientas (tools) que se te proporcionan. NO inventes nombres de herramientas.
 
 Usuario: ${nombreUsuario}
 Fecha actual: ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -30,6 +31,7 @@ Fecha actual: ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 
     switch (contextoPantalla) {
       case 'dashboard': {
         const fincas = await prisma.finca.findMany({
+          where: { usuario_id: userId },
           include: { _count: { select: { bancales: true } } },
           orderBy: { nombre: 'asc' }
         });
@@ -44,6 +46,7 @@ Fecha actual: ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 
 
       case 'fincas': {
         const fincas = await prisma.finca.findMany({
+          where: { usuario_id: userId },
           include: { _count: { select: { bancales: true } } },
           orderBy: { nombre: 'asc' }
         });
@@ -57,8 +60,8 @@ Fecha actual: ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 
       }
 
       case 'finca_detalle': {
-        const finca = await prisma.finca.findUnique({
-          where: { id: entidadId },
+        const finca = await prisma.finca.findFirst({
+          where: { id: entidadId, usuario_id: userId },
           include: {
             bancales: { orderBy: { nombre: 'asc' }, include: { _count: { select: { riegos: true, abonados: true, tratamientos: true, cosechas: true } } } }
           }
@@ -74,8 +77,8 @@ Bancales: ${finca.bancales.map(b => `${b.nombre}(ID:${b.id}, ${b._count.riegos}R
       }
 
       case 'bancal_detalle': {
-        const bancal = await prisma.bancal.findUnique({
-          where: { id: entidadId },
+        const bancal = await prisma.bancal.findFirst({
+          where: { id: entidadId, finca: { usuario_id: userId } },
           include: {
             finca: true,
             variedades: true,
@@ -110,7 +113,7 @@ ${bancal.cosechas.length > 0 ? bancal.cosechas.map(c => `- ${fmtDate(c.fecha)}: 
 
       case 'meteo': {
         const meteoData = await prisma.meteoDatos.findMany({
-          where: { finca_id: entidadId },
+          where: { finca: { id: entidadId, usuario_id: userId } },
           orderBy: { fecha: 'desc' }, take: 7
         });
         systemPrompt += `\nDATOS METEOROLOGICOS (ultimos 7 dias):
@@ -120,12 +123,12 @@ ${meteoData.length > 0 ? meteoData.map(d => `- ${fmtDate(d.fecha)}: ${d.temp_max
       }
 
       case 'economia': {
-        const fincas = await prisma.finca.findMany({ orderBy: { nombre: 'asc' } });
+        const fincas = await prisma.finca.findMany({ where: { usuario_id: userId }, orderBy: { nombre: 'asc' } });
         const fincaId = entidadId || (fincas.length > 0 ? fincas[0].id : null);
         if (fincaId) {
           const [gastos, ingresos] = await Promise.all([
-            prisma.gasto.findMany({ where: { finca_id: fincaId }, orderBy: { fecha: 'desc' }, take: 10 }),
-            prisma.ingreso.findMany({ where: { finca_id: fincaId }, orderBy: { fecha: 'desc' }, take: 10 })
+            prisma.gasto.findMany({ where: { finca: { id: fincaId, usuario_id: userId } }, orderBy: { fecha: 'desc' }, take: 10 }),
+            prisma.ingreso.findMany({ where: { finca: { id: fincaId, usuario_id: userId } }, orderBy: { fecha: 'desc' }, take: 10 })
           ]);
           const totalGastos = gastos.reduce((s, g) => s + g.importe, 0);
           const totalIngresos = ingresos.reduce((s, i) => s + i.importe, 0);
@@ -142,7 +145,7 @@ Gastos por categoria: ${Object.entries(grupos).map(([k, v]) => `${k}:${v.toFixed
       }
 
       case 'calendario': {
-        const fincas = await prisma.finca.findMany({ orderBy: { nombre: 'asc' } });
+        const fincas = await prisma.finca.findMany({ where: { usuario_id: userId }, orderBy: { nombre: 'asc' } });
         if (fincas.length > 0) {
           const f = fincas[0];
           const cult = CULTIVOS_INFO[f.tipo_cultivo] || CULTIVOS_INFO.otro;
@@ -157,10 +160,10 @@ Mes actual: ${meses[mes]}
       }
 
       case 'informes': {
-        const fincas = await prisma.finca.findMany({ orderBy: { nombre: 'asc' } });
+        const fincas = await prisma.finca.findMany({ where: { usuario_id: userId }, orderBy: { nombre: 'asc' } });
         const fincaId = entidadId || (fincas.length > 0 ? fincas[0].id : null);
         if (fincaId) {
-          const bancales = await prisma.bancal.findMany({ where: { finca_id: fincaId } });
+          const bancales = await prisma.bancal.findMany({ where: { finca: { id: fincaId, usuario_id: userId } } });
           let totalKg = 0, totalAgua = 0;
           for (const b of bancales) {
             const cs = await prisma.cosecha.findMany({ where: { bancal_id: b.id } });
@@ -169,8 +172,8 @@ Mes actual: ${meses[mes]}
             totalAgua += rs.reduce((s, r) => s + (r.volumen_m3 || 0), 0);
           }
           const [gastos, ingresos] = await Promise.all([
-            prisma.gasto.aggregate({ _sum: { importe: true }, where: { finca_id: fincaId } }),
-            prisma.ingreso.aggregate({ _sum: { importe: true }, where: { finca_id: fincaId } })
+            prisma.gasto.aggregate({ _sum: { importe: true }, where: { finca: { id: fincaId, usuario_id: userId } } }),
+            prisma.ingreso.aggregate({ _sum: { importe: true }, where: { finca: { id: fincaId, usuario_id: userId } } })
           ]);
           systemPrompt += `\nCONTEXTO INFORMES (Finca ID:${fincaId}):
 Produccion total: ${totalKg} kg

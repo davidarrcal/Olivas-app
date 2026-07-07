@@ -7,13 +7,17 @@ class PodaService {
   async obtenerTodos(bancalId) {
     return prisma.poda.findMany({ where: { bancal_id: bancalId }, orderBy: { fecha: 'desc' } });
   }
-  async obtenerPorId(id) {
-    return prisma.poda.findUnique({ where: { id } });
+  async obtenerPorId(id, userId) {
+    return prisma.poda.findFirst({ where: { id, bancal: { finca: { usuario_id: userId } } } });
   }
-  async actualizar(id, data) {
+  async actualizar(id, data, userId) {
+    const existe = await prisma.poda.findFirst({ where: { id, bancal: { finca: { usuario_id: userId } } } });
+    if (!existe) throw new Error('No encontrado');
     return prisma.poda.update({ where: { id }, data });
   }
-  async eliminar(id) {
+  async eliminar(id, userId) {
+    const existe = await prisma.poda.findFirst({ where: { id, bancal: { finca: { usuario_id: userId } } } });
+    if (!existe) throw new Error('No encontrado');
     return prisma.poda.delete({ where: { id } });
   }
 }

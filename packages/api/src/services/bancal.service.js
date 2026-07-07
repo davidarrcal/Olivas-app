@@ -1,7 +1,9 @@
 const prisma = require('../prisma');
 
 class BancalService {
-  async crear(data) {
+  async crear(data, userId) {
+    const finca = await prisma.finca.findFirst({ where: { id: data.finca_id, usuario_id: userId }, select: { id: true } });
+    if (!finca) throw new Error('Finca no encontrada');
     return prisma.bancal.create({
       data,
       include: { finca: true }
@@ -19,9 +21,9 @@ class BancalService {
     });
   }
 
-  async obtenerPorId(id) {
-    return prisma.bancal.findUnique({
-      where: { id },
+  async obtenerPorId(id, userId) {
+    return prisma.bancal.findFirst({
+      where: { id, finca: { usuario_id: userId } },
       include: {
         finca: true,
         variedades: true,
@@ -35,7 +37,9 @@ class BancalService {
     });
   }
 
-  async actualizar(id, data) {
+  async actualizar(id, data, userId) {
+    const bancal = await prisma.bancal.findFirst({ where: { id, finca: { usuario_id: userId } }, select: { id: true } });
+    if (!bancal) return null;
     return prisma.bancal.update({
       where: { id },
       data,
@@ -43,7 +47,9 @@ class BancalService {
     });
   }
 
-  async eliminar(id) {
+  async eliminar(id, userId) {
+    const bancal = await prisma.bancal.findFirst({ where: { id, finca: { usuario_id: userId } }, select: { id: true } });
+    if (!bancal) return null;
     return prisma.bancal.delete({ where: { id } });
   }
 }

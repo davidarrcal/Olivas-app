@@ -13,15 +13,15 @@ class MeteoDatosController {
       res.json(r);
     } catch(e) { next(e); }
   }
-  async obtenerPorId(req, res, next) { try { const r = await meteoService.obtenerPorId(Number(req.params.id)); if(!r) return res.status(404).json({error:'No encontrado'}); res.json(r); } catch(e) { next(e); } }
+  async obtenerPorId(req, res, next) { try { const r = await meteoService.obtenerPorId(Number(req.params.id), req.user.id); if(!r) return res.status(404).json({error:'No encontrado'}); res.json(r); } catch(e) { next(e); } }
   async actualizar(req, res, next) {
     try {
       if (req.body.fecha) req.body.fecha = new Date(req.body.fecha);
-      const r = await meteoService.actualizar(Number(req.params.id), req.body);
+      const r = await meteoService.actualizar(Number(req.params.id), req.body, req.user.id);
       res.json(r);
     } catch(e) { next(e); }
   }
-  async eliminar(req, res, next) { try { await meteoService.eliminar(Number(req.params.id)); res.status(204).send(); } catch(e) { next(e); } }
+  async eliminar(req, res, next) { try { await meteoService.eliminar(Number(req.params.id), req.user.id); res.status(204).send(); } catch(e) { next(e); } }
   async resumen(req, res, next) { try { const r = await meteoService.resumen(Number(req.params.fincaId)); res.json(r); } catch(e) { next(e); } }
 }
 module.exports = new MeteoDatosController();

@@ -1,12 +1,13 @@
 const prisma = require('../prisma');
 
 class FincaService {
-  async crear(data) {
-    return prisma.finca.create({ data });
+  async crear(data, userId) {
+    return prisma.finca.create({ data: { ...data, usuario_id: userId } });
   }
 
-  async obtenerTodas() {
+  async obtenerTodas(userId) {
     return prisma.finca.findMany({
+      where: { usuario_id: userId },
       include: {
         _count: { select: { bancales: true } }
       },
@@ -14,9 +15,9 @@ class FincaService {
     });
   }
 
-  async obtenerPorId(id) {
-    return prisma.finca.findUnique({
-      where: { id },
+  async obtenerPorId(id, userId) {
+    return prisma.finca.findFirst({
+      where: { id, usuario_id: userId },
       include: {
         bancales: { orderBy: { nombre: 'asc' } },
         _count: { select: { bancales: true, maquinarias: true } }
@@ -24,17 +25,21 @@ class FincaService {
     });
   }
 
-  async actualizar(id, data) {
+  async actualizar(id, data, userId) {
+    const finca = await prisma.finca.findFirst({ where: { id, usuario_id: userId }, select: { id: true } });
+    if (!finca) return null;
     return prisma.finca.update({ where: { id }, data });
   }
 
-  async eliminar(id) {
+  async eliminar(id, userId) {
+    const finca = await prisma.finca.findFirst({ where: { id, usuario_id: userId }, select: { id: true } });
+    if (!finca) return null;
     return prisma.finca.delete({ where: { id } });
   }
 
-  async resumen(id) {
-    const finca = await prisma.finca.findUnique({
-      where: { id },
+  async resumen(id, userId) {
+    const finca = await prisma.finca.findFirst({
+      where: { id, usuario_id: userId },
       include: { bancales: { select: { id: true, superficie: true } } }
     });
 

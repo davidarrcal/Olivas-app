@@ -1,8 +1,8 @@
 const prisma = require('../prisma');
 
 class DashboardService {
-  async resumenGlobal(fincaId) {
-    const finca = await prisma.finca.findUnique({ where: { id: fincaId } });
+  async resumenGlobal(fincaId, userId) {
+    const finca = await prisma.finca.findFirst({ where: { id: fincaId, usuario_id: userId } });
     if (!finca) return null;
 
     const [bancales, cosechas, gastos, ingresos, riegosRecientes, tratamientosRecientes, abonadosRecientes, alertasStock] = await Promise.all([
@@ -59,7 +59,9 @@ class DashboardService {
     };
   }
 
-  async calendario(fincaId) {
+  async calendario(fincaId, userId) {
+    const finca = await prisma.finca.findFirst({ where: { id: fincaId, usuario_id: userId } });
+    if (!finca) return null;
     const ahora = new Date();
     const anio = ahora.getFullYear();
     const inicioAnio = new Date(anio, 0, 1);

@@ -4,6 +4,7 @@ const cors = require('cors');
 const errorHandler = require('./middleware/errorHandler');
 const authMiddleware = require('./middleware/auth');
 const convertDates = require('./middleware/convertDates');
+const { verifyFincaOwnership, verifyBancalOwnership } = require('./middleware/verifyOwnership');
 
 const authRoutes = require('./routes/auth.routes');
 const fincaRoutes = require('./routes/finca.routes');
@@ -39,20 +40,20 @@ app.use('/api/auth', authRoutes);
 app.use('/api', authMiddleware);
 
 app.use('/api/fincas', fincaRoutes);
-app.use('/api/fincas/:fincaId/bancales', bancalRoutes);
-app.use('/api/fincas/:fincaId/bancales/:bancalId/riegos', riegoRoutes);
-app.use('/api/fincas/:fincaId/bancales/:bancalId/abonados', abonadoRoutes);
-app.use('/api/fincas/:fincaId/bancales/:bancalId/tratamientos', tratamientoRoutes);
-app.use('/api/fincas/:fincaId/bancales/:bancalId/podas', podaRoutes);
-app.use('/api/fincas/:fincaId/bancales/:bancalId/cosechas', cosechaRoutes);
-app.use('/api/fincas/:fincaId/bancales/:bancalId/analisis', analisisRoutes);
-app.use('/api/fincas/:fincaId/bancales/:bancalId/diario', diarioRoutes);
-app.use('/api/fincas/:fincaId/meteo', meteoRoutes);
-app.use('/api/fincas/:fincaId/gastos', gastoRoutes);
-app.use('/api/fincas/:fincaId/ingresos', ingresoRoutes);
-app.use('/api/fincas/:fincaId/maquinaria', maquinariaRoutes);
-app.use('/api/fincas/:fincaId/inventario', inventarioRoutes);
-app.use('/api/fincas/:fincaId/dashboard', dashboardRoutes);
+app.use('/api/fincas/:fincaId/bancales', verifyFincaOwnership, bancalRoutes);
+app.use('/api/fincas/:fincaId/bancales/:bancalId/riegos', verifyFincaOwnership, riegoRoutes);
+app.use('/api/fincas/:fincaId/bancales/:bancalId/abonados', verifyFincaOwnership, abonadoRoutes);
+app.use('/api/fincas/:fincaId/bancales/:bancalId/tratamientos', verifyFincaOwnership, tratamientoRoutes);
+app.use('/api/fincas/:fincaId/bancales/:bancalId/podas', verifyFincaOwnership, podaRoutes);
+app.use('/api/fincas/:fincaId/bancales/:bancalId/cosechas', verifyFincaOwnership, cosechaRoutes);
+app.use('/api/fincas/:fincaId/bancales/:bancalId/analisis', verifyFincaOwnership, analisisRoutes);
+app.use('/api/fincas/:fincaId/bancales/:bancalId/diario', verifyFincaOwnership, diarioRoutes);
+app.use('/api/fincas/:fincaId/meteo', verifyFincaOwnership, meteoRoutes);
+app.use('/api/fincas/:fincaId/gastos', verifyFincaOwnership, gastoRoutes);
+app.use('/api/fincas/:fincaId/ingresos', verifyFincaOwnership, ingresoRoutes);
+app.use('/api/fincas/:fincaId/maquinaria', verifyFincaOwnership, maquinariaRoutes);
+app.use('/api/fincas/:fincaId/inventario', verifyFincaOwnership, inventarioRoutes);
+app.use('/api/fincas/:fincaId/dashboard', verifyFincaOwnership, dashboardRoutes);
 app.use('/api/productos', productoRoutes);
 app.use('/api/ia', iaRoutes);
 
@@ -60,8 +61,8 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 app.get('/api/bancales/:id', async (req, res, next) => {
   try {
-    const bancal = await prisma.bancal.findUnique({
-      where: { id: Number(req.params.id) },
+    const bancal = await prisma.bancal.findFirst({
+      where: { id: Number(req.params.id), finca: { usuario_id: req.user.id } },
       include: { finca: true, variedades: true, riegos: { orderBy: { fecha_inicio: 'desc' }, take: 5 }, abonados: { orderBy: { fecha: 'desc' }, take: 5, include: { producto: true } }, tratamientos: { orderBy: { fecha: 'desc' }, take: 5, include: { producto: true } }, podas: { orderBy: { fecha: 'desc' }, take: 5 }, cosechas: { orderBy: { fecha: 'desc' }, take: 5 }, analisis: { orderBy: { fecha: 'desc' }, take: 5 } }
     });
     if (!bancal) return res.status(404).json({ error: 'Bancal no encontrado' });

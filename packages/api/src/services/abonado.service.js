@@ -7,13 +7,17 @@ class AbonadoService {
   async obtenerTodos(bancalId) {
     return prisma.abonado.findMany({ where: { bancal_id: bancalId }, include: { producto: true }, orderBy: { fecha: 'desc' } });
   }
-  async obtenerPorId(id) {
-    return prisma.abonado.findUnique({ where: { id }, include: { producto: true } });
+  async obtenerPorId(id, userId) {
+    return prisma.abonado.findFirst({ where: { id, bancal: { finca: { usuario_id: userId } } }, include: { producto: true } });
   }
-  async actualizar(id, data) {
+  async actualizar(id, data, userId) {
+    const existe = await prisma.abonado.findFirst({ where: { id, bancal: { finca: { usuario_id: userId } } } });
+    if (!existe) throw new Error('No encontrado');
     return prisma.abonado.update({ where: { id }, data, include: { producto: true } });
   }
-  async eliminar(id) {
+  async eliminar(id, userId) {
+    const existe = await prisma.abonado.findFirst({ where: { id, bancal: { finca: { usuario_id: userId } } } });
+    if (!existe) throw new Error('No encontrado');
     return prisma.abonado.delete({ where: { id } });
   }
 }
