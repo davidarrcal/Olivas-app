@@ -14,7 +14,7 @@ async function buildContext({ userId, contextoPantalla, entidadId }) {
   const usuario = await prisma.usuario.findUnique({ where: { id: userId } });
   const nombreUsuario = usuario ? usuario.nombre : 'Agricultor';
 
-  let systemPrompt = `Eres un asesor agricola experto integrado en la app "Olivas".
+  let systemPrompt = `Eres un asesor agricola experto integrado en la app "Gestion de Campo".
 Responde en espanol, de forma clara y concisa (max 300 palabras).
 Eres un ingeniero agronomo, meteorologo y asistente tecnico.
 Siempre explica el MOTIVO de tus recomendaciones.

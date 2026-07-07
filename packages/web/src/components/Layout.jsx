@@ -18,7 +18,7 @@ export default function Layout() {
       <div className={`sidebar-backdrop ${menuOpen ? 'open' : ''}`} onClick={closeMenu} />
       <aside className={`sidebar ${menuOpen ? 'open' : ''}`}>
         <div className="sidebar-logo">
-          <h1>Olivas</h1>
+          <h1>Gestion de Campo</h1>
           <span>Gestion agricola</span>
         </div>
         <div onClick={closeMenu}>

@@ -38,8 +38,8 @@ export default function Dashboard() {
       <div>
         <div className="page-header"><h2>Dashboard</h2></div>
         <div className="empty-state">
-          <h3>Bienvenido a Olivas</h3>
-          <p>Empieza creando tu primera finca para gestionar tu olivar.</p>
+          <h3>Bienvenido a Gestion de Campo</h3>
+          <p>Empieza creando tu primera finca para gestionar tu explotacion agricola.</p>
           <Link to="/fincas" className="btn btn-primary" style={{ marginTop: '1rem' }}>Crear Finca</Link>
         </div>
       </div>

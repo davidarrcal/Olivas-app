@@ -48,7 +48,7 @@ async function generarResumen(mensajes) {
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://olivas-app-web.vercel.app',
-        'X-OpenRouter-Title': 'Olivas - Gestion Agricola'
+        'X-OpenRouter-Title': 'Gestion de Campo - Asesor Agricola'
       },
       body: JSON.stringify({
         model: MODEL,

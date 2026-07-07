@@ -32,7 +32,7 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(convertDates);
 
-app.get('/', (req, res) => { res.json({ app: 'Olivas API', version: '3.0.0' }); });
+app.get('/', (req, res) => { res.json({ app: 'Gestion de Campo API', version: '3.0.0' }); });
 app.get('/api/health', (req, res) => { res.json({ estado: 'ok', timestamp: new Date().toISOString() }); });
 
 app.use('/api/auth', authRoutes);
@@ -71,4 +71,4 @@ app.get('/api/bancales/:id', async (req, res, next) => {
 });
 
 app.use(errorHandler);
-app.listen(PORT, () => { console.log('Olivas API v3 arrancada en http://localhost:' + PORT); });
+app.listen(PORT, () => { console.log('Gestion de Campo API v3 arrancada en http://localhost:' + PORT); });
