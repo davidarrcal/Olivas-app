@@ -268,6 +268,21 @@ const ALL_TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'consultar_calendario',
+      description: 'Consultar tareas agricolas recomendadas para un mes y cultivo concreto',
+      parameters: {
+        type: 'object',
+        properties: {
+          mes: { type: 'number', description: 'Numero de mes 1-12 (1=enero, 12=diciembre)' },
+          cultivo: { type: 'string', description: 'Tipo de cultivo: olivo, almendro, citricos, vid, pistacho, frutales, otro' }
+        },
+        required: ['mes']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
       name: 'crear_alerta',
       description: 'Crear una alerta o recordatorio para el agricultor',
       parameters: {
@@ -286,7 +301,7 @@ const ALL_TOOLS = [
 ];
 
 const TOOLS_BY_CONTEXT = {
-  dashboard: ['consultar_fincas', 'consultar_produccion', 'consultar_economia', 'consultar_meteo', 'calcular_riego', 'crear_alerta'],
+  dashboard: ['consultar_fincas', 'consultar_produccion', 'consultar_economia', 'consultar_meteo', 'calcular_riego', 'consultar_calendario', 'crear_alerta'],
   fincas: ['consultar_fincas', 'crear_finca', 'consultar_bancales', 'crear_bancal'],
   finca_detalle: ['consultar_bancales', 'crear_bancal', 'consultar_produccion', 'consultar_economia', 'registrar_gasto', 'registrar_ingreso'],
   bancal_detalle: ['registrar_riego', 'consultar_riegos', 'registrar_abonado', 'registrar_tratamiento', 'registrar_poda', 'registrar_cosecha', 'consultar_meteo', 'calcular_riego', 'consultar_produccion', 'crear_alerta'],
@@ -295,7 +310,7 @@ const TOOLS_BY_CONTEXT = {
   maquinaria: ['consultar_fincas'],
   inventario: ['consultar_fincas'],
   productos: ['consultar_fincas'],
-  calendario: ['consultar_meteo', 'crear_alerta'],
+  calendario: ['consultar_meteo', 'consultar_calendario', 'crear_alerta'],
   informes: ['consultar_produccion', 'consultar_economia', 'consultar_riegos'],
   global: ALL_TOOLS.map(t => t.function.name)
 };
@@ -511,6 +526,13 @@ const TOOL_EXECUTORS = {
       data: { usuario_id: userId, finca_id: params.finca_id || null, tipo: params.tipo, severidad: params.severidad || 'info', titulo: params.titulo, mensaje: params.mensaje }
     });
     return { success: true, id: alerta.id, message: `Alerta creada: ${params.titulo}` };
+  },
+  consultar_calendario: async (params, userId) => {
+    const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const mes = params.mes || (new Date().getMonth() + 1);
+    const cultivo = params.cultivo || 'olivo';
+    const tareas = getTareasCalendario(mes, cultivo);
+    return { mes: MESES[mes - 1], cultivo, tareas };
   }
 };
 
@@ -541,3 +563,95 @@ async function executeTools(toolCalls, userId) {
 }
 
 module.exports = { getToolsForContext, executeTools, ALL_TOOLS };
+
+function getTareasCalendario(mes, cultivo) {
+  const CALENDARIO = {
+    olivo: {
+      1: ['Poda de formacion y fructificacion', 'Recoleccion de aceituna (variedades tardias)', 'Tratamientos antipulgon si hay riesgo de helada'],
+      2: ['Fin de recoleccion en zonas tardias', 'Poda', 'Abonado fosfopotasico de fondo', 'Preparacion de maquinaria para primavera'],
+      3: ['Inicio de brotacion', 'Tratamiento contra pulgon y Prays', 'Abonado nitrogenado de inicio', 'Laboreo del suelo'],
+      4: ['Tratamientos preventivos contra Repilo', 'Fertilizacion nitrogenada', 'Control de malas hierbas', 'Riego de inicio si no llueve'],
+      5: ['Floracion (cuidado con heladas tardias)', 'Tratamiento contra Polilla del olivo', 'Abonado foliar con boro', 'Control de hierba'],
+      6: ['Cuajado del fruto', 'Tratamientos contra Mosca del olivo (trampas)', 'Riego sostenido', 'Abonado potasico'],
+      7: ['Riego intensivo (maxima demanda)', 'Control de Mosca del olivo', 'Lucha contra repilo y antracnosis', 'Seguimiento de sanidad'],
+      8: ['Riego intensivo', 'Muestreo de aceituna para seguimiento', 'Preparacion de vendimia/recoleccion', 'Control de plagas'],
+      9: ['Inicio de envero (cambio de color)', 'Riego de mantenimiento', 'Preparacion de almazara', 'Tratamientos solo si periodo seguridad lo permite'],
+      10: ['Inicio de recoleccion de verdeo', 'Riego de fin de ciclo', 'Recoleccion de variedades tempranas', 'Limpieza de finca post-recoleccion'],
+      11: ['Recoleccion principal de aceituna de almazara', 'Poda preliminar', 'Abonado organico si procede', 'Reposo invernal'],
+      12: ['Recoleccion tardia', 'Poda estructural', 'Preparacion de maquinaria', 'Planificacion de proxima campana']
+    },
+    almendro: {
+      1: ['Poda en produccion', 'Reposo invernal', 'Revision de riego por goteo'],
+      2: ['Poda', 'Pre-floracion: tratamientos preventivos', 'Fertilizacion de fondo P-K'],
+      3: ['Floracion (proteger de heladas)', 'Polinizacion: revisar abejas', 'Abonado nitrogenado inicio'],
+      4: ['Cuajado y crecimiento del fruto', 'Tratamientos contra Taphrina y Pulgon', 'Control de malas hierbas'],
+      5: ['Crecimiento del fruto', 'Riego de inicio', 'Abonado potasico', 'Control de plagas'],
+      6: ['Riego sostenido', 'Tratamientos contra Carpocapsa', 'Control de malas hierbas'],
+      7: ['Riego intensivo (maxima demanda)', 'Seguimiento de plagas', 'Abonado foliar'],
+      8: ['Riego intensivo', 'Preparacion de recoleccion (variedades tempranas)', 'Inicio recoleccion en algunas variedades'],
+      9: ['Recoleccion principal', 'Secado de almendra', 'Poda post-recoleccion'],
+      10: ['Fin de recoleccion', 'Poda', 'Abonado de fondo', 'Limpieza de finca'],
+      11: ['Poda', 'Reposo invernal', 'Mantenimiento de maquinaria'],
+      12: ['Poda', 'Reposo invernal', 'Planificacion de campana']
+    },
+    citricos: {
+      1: ['Recoleccion de naranjas y mandarinas tardias', 'Tratamientos post-cosecha', 'Poda ligera'],
+      2: ['Recoleccion tardia', 'Poda', 'Fertilizacion de fondo', 'Control de Ploryctes'],
+      3: ['Brotacion de primavera', 'Tratamientos contra Pulgon y Cochinilla', 'Abonado nitrogenado'],
+      4: ['Cuajado y desarrollo del fruto', 'Riego de inicio', 'Control de Minador de hoja', 'Abonado foliar'],
+      5: ['Crecimiento del fruto', 'Riego sostenido', 'Tratamientos contra Araña roja', 'Control de hierba'],
+      6: ['Riego intensivo', 'Abonado potasico', 'Control de Cochinilla', 'Clareo de frutos si hay sobrecarga'],
+      7: ['Riego intensivo (maxima demanda)', 'Tratamientos contra Mosca de la fruta', 'Seguimiento de sanidad'],
+      8: ['Riego intensivo', 'Preparacion de recoleccion de variedades tempranas', 'Control de plagas'],
+      9: ['Inicio de recoleccion (limones, mandarinas tempranas)', 'Riego de mantenimiento', 'Tratamientos post-cosecha'],
+      10: ['Recoleccion principal de mandarinas', 'Riego de fin de ciclo', 'Abonado post-recoleccion'],
+      11: ['Recoleccion de naranjas', 'Poda ligera', 'Fertilizacion organica', 'Proteccion anti-helada'],
+      12: ['Recoleccion invernal', 'Proteccion contra heladas', 'Mantenimiento de sistema de riego']
+    },
+    vid: {
+      1: ['Poda en reposo invernal', 'Tratamientos con caldo bordelés', 'Reposo'],
+      2: ['Poda principal', 'Preparacion de tutores y espalderas', 'Fertilizacion de fondo P-K'],
+      3: ['Lloro (inicio de savia)', 'Tratamientos preventivos contra Mildiu', 'Abonado nitrogenado inicio', 'Laboreo del suelo'],
+      4: ['Brotacion y crecimiento', 'Tratamientos contra Mildiu y Oidio', 'Desbroce', 'Riego de inicio'],
+      5: ['Floracion', 'Tratamientos preventivos (Mildiu, Oidio, Botrytis)', 'Abonado potasico', 'Control de hierba'],
+      6: ['Cuajado y desarrollo del racimo', 'Riego sostenido', 'Tratamientos contra Polilla del racimo', 'Aclareo de racimos si hay sobrecarga'],
+      7: ['Riego intensivo', 'Tratamientos contra Mildiu y Oidio', 'Control de Botrytis', 'Seguimiento de maduracion'],
+      8: ['Inicio de vendimia (variedades blancas)', 'Riego de fin de ciclo', 'Preparacion de bodega', 'Control de acidez'],
+      9: ['Vendimia principal', 'Recoleccion de uva de mesa', 'Poda en verde', 'Tratamientos post-recoleccion'],
+      10: ['Fin de vendimia', 'Poda post-recoleccion', 'Abonado organico de fondo', 'Limpieza de finca'],
+      11: ['Poda en reposo', 'Tratamientos invernales (caldo bordelés)', 'Mantenimiento de espalderas'],
+      12: ['Poda', 'Reposo invernal', 'Planificacion de proxima vendimia']
+    },
+    pistacho: {
+      1: ['Reposo invernal', 'Poda estructural', 'Revision de riego'],
+      2: ['Poda', 'Fertilizacion de fondo P-K', 'Preparacion de primavera'],
+      3: ['Brotacion', 'Tratamientos preventivos contra Pulgon', 'Abonado nitrogenado inicio', 'Control de malas hierbas'],
+      4: ['Crecimiento vegetativo', 'Riego de inicio', 'Tratamientos contra Ploryctes', 'Laboreo del suelo'],
+      5: ['Floracion y polinizacion (verificar machos)', 'Riego sostenido', 'Abonado potasico', 'Control de plagas'],
+      6: ['Desarrollo del fruto', 'Riego sostenido', 'Tratamientos contra Araña roja', 'Control de hierba'],
+      7: ['Riego intensivo (maxima demanda)', 'Seguimiento de cuajado', 'Control de plagas', 'Abonado foliar'],
+      8: ['Riego intensivo', 'Maduracion del fruto', 'Preparacion de recoleccion', 'Control de Bird damage (pajaros)'],
+      9: ['Recoleccion principal', 'Secado de pistacho', 'Tratamientos post-cosecha'],
+      10: ['Fin de recoleccion', 'Poda', 'Abonado de fondo', 'Limpieza de finca'],
+      11: ['Poda', 'Reposo invernal', 'Mantenimiento de maquinaria'],
+      12: ['Poda estructural', 'Reposo invernal', 'Planificacion de campana']
+    },
+    frutales: {
+      1: ['Poda en reposo invernal', 'Tratamientos con caldo bordelés', 'Reposo'],
+      2: ['Poda principal', 'Fertilizacion de fondo P-K', 'Preparacion de primavera', 'Control de Ploryctes'],
+      3: ['Brotacion y floracion (proteger de heladas)', 'Tratamientos preventivos', 'Abonado nitrogenado inicio', 'Polinizacion: revisar abejas'],
+      4: ['Cuajado y desarrollo del fruto', 'Riego de inicio', 'Tratamientos contra Pulgon y Cochinilla', 'Clareo de frutos'],
+      5: ['Crecimiento del fruto', 'Riego sostenido', 'Abonado potasico', 'Control de Carpocapsa'],
+      6: ['Riego sostenido', 'Clareo de frutos si hay sobrecarga', 'Tratamientos contra Araña roja', 'Control de hierba'],
+      7: ['Riego intensivo (maxima demanda)', 'Tratamientos contra Mosca de la fruta', 'Seguimiento de maduracion', 'Recoleccion de variedades tempranas'],
+      8: ['Recoleccion de variedades tempranas', 'Riego de mantenimiento', 'Control de Mosca', 'Preparacion de almacén'],
+      9: ['Recoleccion principal', 'Poda post-recoleccion', 'Tratamientos post-cosecha', 'Conservacion de fruta'],
+      10: ['Fin de recoleccion', 'Poda', 'Abonado organico de fondo', 'Limpieza de finca'],
+      11: ['Poda en reposo', 'Tratamientos invernales', 'Mantenimiento de riego', 'Proteccion anti-helada'],
+      12: ['Poda estructural', 'Reposo invernal', 'Planificacion de proxima campana']
+    }
+  };
+
+  const calendario = CALENDARIO[cultivo] || CALENDARIO.olivo;
+  return calendario[mes] || calendario[new Date().getMonth() + 1] || [];
+}
